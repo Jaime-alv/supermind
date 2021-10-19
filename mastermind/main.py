@@ -1,6 +1,7 @@
 # Copyright (C) 2021 Jaime Alvarez Fernandez
 
 import random
+import tkinter as tk
 
 
 # white = right colour, bad position
@@ -64,5 +65,17 @@ class Game:
         self.round += 1
 
 
+class GameWindow(tk.Frame):
+    def __init__(self, master):
+        super().__init__(master)
+        self.master = master
+        self.master.title('Mastermind')
+        self.master.geometry('300x800')
+        self.pack(expand=1, fill='both')
+
+
 if __name__ == '__main__':
-    Game()
+    window = tk.Tk()
+    app = GameWindow(window)
+    app.mainloop()
+
