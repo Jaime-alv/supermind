@@ -72,6 +72,14 @@ class GameWindow(tk.Frame):
         self.master.title('Mastermind')
         self.master.geometry('300x800')
         self.pack(expand=1, fill='both')
+        self.terminate()
+
+    def terminate(self):
+        close_program = tk.Button(self, fg='red', command=self.master.destroy)
+        close_program['text'] = 'Close game'
+        close_program['padx'] = 5
+        close_program['pady'] = 5
+        close_program.pack(side='bottom')
 
 
 if __name__ == '__main__':
