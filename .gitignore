@@ -4,3 +4,6 @@ tests/
 
 # python cache
 __pycache__/
+
+# profiles
+profiles/*
