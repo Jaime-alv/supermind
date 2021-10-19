@@ -2,9 +2,8 @@
 tests/
 .idea/
 
-
 # python cache
 __pycache__/
 
 # profiles
-profiles/*.txt
+profiles/*
