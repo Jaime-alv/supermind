@@ -1,7 +1,8 @@
 # Copyright (C) 2021 Jaime Alvarez Fernandez
-
+import pathlib
 import random
 import tkinter as tk
+import json
 
 
 # white = right colour, bad position
@@ -73,7 +74,9 @@ class GameWindow(tk.Frame):
         self.master.geometry('300x800')
         self.pack(expand=1, fill='both')
         self.terminate()
+        self.main_window()
 
+    # close main window
     def terminate(self):
         close_program = tk.Button(self, fg='red', command=self.master.destroy)
         close_program['text'] = 'Close game'
@@ -81,9 +84,30 @@ class GameWindow(tk.Frame):
         close_program['pady'] = 5
         close_program.pack(side='bottom')
 
+    # create main frame
+    def main_window(self):
+        new_profile = tk.Button(self, text='New profile', command=self.create_new_profile)
+        new_profile.pack()
+        self.user_name = tk.StringVar()
+        name_entry = tk.Entry(self, textvariable=self.user_name)
+        name_entry.pack()
+        name_entry.focus()
+        load_profile = tk.Button(self, text='Load profile', command=self.load_profile)
+        load_profile.pack()
+
+    # create a new profile
+    def create_new_profile(self):
+        user = self.user_name.get()
+        with pathlib.Path(f'profiles\\{user}.txt').open('w') as file:
+            json.dump({'name': user}, file)
+
+    # load an existing profile
+    def load_profile(self):
+        for file in pathlib.Path('profiles\\').iterdir():
+            print(file)
+
 
 if __name__ == '__main__':
     window = tk.Tk()
     app = GameWindow(window)
     app.mainloop()
-
