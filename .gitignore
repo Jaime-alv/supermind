@@ -1,0 +1,6 @@
+# folders
+tests/
+.idea/
+
+# python cache
+__pycache__/
