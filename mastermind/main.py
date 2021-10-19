@@ -3,6 +3,8 @@ import pathlib
 import random
 import tkinter as tk
 import json
+import re
+from tkinter import messagebox
 
 
 # white = right colour, bad position
@@ -69,17 +71,27 @@ class Game:
 class GameWindow(tk.Frame):
     def __init__(self, master):
         super().__init__(master)
+        self.profile_list = []
+        self.for_delete = []
         self.master = master
         self.master.title('Mastermind')
-        self.master.geometry('300x800')
+        self.master.geometry('250x250')
         self.pack(expand=1, fill='both')
-        self.terminate()
+        self.terminate(self, self.master, 'Close game')
         self.main_window()
 
+    # create profile_list
+    def create_profile_list(self):
+        self.profile_list.clear()
+        for file in pathlib.Path('profiles').iterdir():
+            file_str = str(file)
+            name = re.compile(r'profiles\\(?P<name>.*?)\.txt')
+            search = name.search(file_str)
+            self.profile_list.append(search.group('name'))
+
     # close main window
-    def terminate(self):
-        close_program = tk.Button(self, fg='red', command=self.master.destroy)
-        close_program['text'] = 'Close game'
+    def terminate(self, where, what, text):
+        close_program = tk.Button(where, fg='red', command=what.destroy, text=text)
         close_program['padx'] = 5
         close_program['pady'] = 5
         close_program.pack(side='bottom')
@@ -88,23 +100,65 @@ class GameWindow(tk.Frame):
     def main_window(self):
         new_profile = tk.Button(self, text='New profile', command=self.create_new_profile)
         new_profile.pack()
-        self.user_name = tk.StringVar()
-        name_entry = tk.Entry(self, textvariable=self.user_name)
-        name_entry.pack()
-        name_entry.focus()
         load_profile = tk.Button(self, text='Load profile', command=self.load_profile)
         load_profile.pack()
+        delete_profile = tk.Button(self, text='Delete profile', command=self.delete_profile)
+        delete_profile.pack()
 
     # create a new profile
     def create_new_profile(self):
+        self.new_profile_window = tk.Toplevel(self)
+        self.new_profile_window.title('New profile')
+        self.terminate(self.new_profile_window, self.new_profile_window, 'Close window')
+        label = tk.Label(self.new_profile_window, text='Enter your name')
+        label.pack()
+        self.user_name = tk.StringVar()
+        name_entry = tk.Entry(self.new_profile_window, textvariable=self.user_name)
+        name_entry.pack()
+        name_entry.focus()
+        submit = tk.Button(self.new_profile_window, text='Submit', command=self.create_json)
+        submit.pack()
+
+    def create_json(self):
         user = self.user_name.get()
-        with pathlib.Path(f'profiles\\{user}.txt').open('w') as file:
-            json.dump({'name': user}, file)
+        if user != '':
+            with pathlib.Path(f'profiles\\{user}.txt').open('w') as file:
+                json.dump({'name': user}, file)
+            self.new_profile_window.destroy()
+        else:
+            messagebox.showerror('Error!', "Name can't be empty!")
+
 
     # load an existing profile
     def load_profile(self):
-        for file in pathlib.Path('profiles\\').iterdir():
-            print(file)
+        self.load_profile_window = tk.Toplevel(self)
+        self.load_profile_window.title('Select a profile')
+        self.terminate(self.load_profile_window, self.load_profile_window, 'Close window')
+        self.create_profile_list()
+        for index in range(len(self.profile_list)):
+            button_with_name = tk.Button(self.load_profile_window, text=self.profile_list[index],
+                                         command=lambda i=index: self.print_this(self.profile_list[i]))
+            button_with_name.pack(anchor='w')
+
+    def print_this(self, name):
+        print(name)
+        self.load_profile_window.destroy()
+
+    # Delete an existing profile
+    def delete_profile(self):
+        self.delete_profile_window = tk.Toplevel(self)
+        self.delete_profile_window.title('Delete profile')
+        self.terminate(self.delete_profile_window, self.delete_profile_window, 'Close window')
+        self.create_profile_list()
+        for index in range(len(self.profile_list)):
+            button_with_name = tk.Button(self.delete_profile_window, text=self.profile_list[index],
+                                         command=lambda i=index: self.del_this(self.profile_list[i]))
+            button_with_name.pack(anchor='w', padx=5, pady=5, ipady=5)
+
+    def del_this(self, i):
+        pathlib.Path.unlink(pathlib.Path(f'profiles\\{i}.txt'), missing_ok=True)
+        self.delete_profile_window.destroy()
+        self.delete_profile()
 
 
 if __name__ == '__main__':
