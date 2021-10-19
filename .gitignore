@@ -7,4 +7,4 @@ tests/
 __pycache__/
 
 # profiles
-profiles/*
+profiles/*.txt
