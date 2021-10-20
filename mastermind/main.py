@@ -223,27 +223,31 @@ class MainWindow(tk.Frame):
         if self.player != '':
             self.select_difficult_window = tk.Toplevel(self)
             self.select_difficult_window.title('Choose your level')
-            self.select_frame = tk.Frame(self.select_difficult_window)
-            self.select_frame.pack()
+            # divided in 2 frames; left for normal modes, right for custom
+            left_frame = tk.Frame(self.select_difficult_window)
+            left_frame.pack(side='left')
+            four_buttons = tk.Frame(left_frame)
+            four_buttons.pack()
             # easy (6 colours, 3 holes)
-            easy = tk.Button(self.select_frame, text='Easy', command=self.easy)
+            easy = tk.Button(four_buttons, text='Easy', command=self.easy)
             easy.grid(column=0, row=0)
             # medium (6 colours, 4 holes)
-            medium = tk.Button(self.select_frame, text='Medium', command=self.medium)
+            medium = tk.Button(four_buttons, text='Medium', command=self.medium)
             medium.grid(column=0, row=1)
             # hard (8 colours, 5 holes)
-            hard = tk.Button(self.select_frame, text='Hard', command=self.hard)
+            hard = tk.Button(four_buttons, text='Hard', command=self.hard)
             hard.grid(column=1, row=0)
             # custom (up to 8 colours, up to 8 holes?)
-            custom = tk.Button(self.select_frame, text='Custom')
+            custom = tk.Button(four_buttons, text='Custom', command=self.custom_frame)
             custom.grid(column=1, row=1)
             # ask for number of games
-            games_label = tk.Label(text="How many games will be playing?")
-            self.games = tk.IntVar()
-            self.games.set(3)
-            entry = tk.Entry(self.select_difficult_window, textvariable=self.games)
+            games_label = tk.Label(left_frame, text="How many games will be playing?")
+            games_label.pack()
+            self.games = tk.StringVar()
+            self.games.set('3')
+            entry = tk.Entry(left_frame, textvariable=self.games)
             entry.focus()
-            self.terminate(self.select_difficult_window, self.select_difficult_window, 'Close window')
+            self.terminate(left_frame, self.select_difficult_window, 'Close window')
             entry.pack(pady=5, padx=10, anchor='n', side='bottom', ipady=4)
         else:
             messagebox.showerror('Error!', 'Load a profile first!')
@@ -251,8 +255,8 @@ class MainWindow(tk.Frame):
     # check number of games is higher than 0
     def check_games(self):
         games = self.games.get()
-        if games > 0:
-            return games
+        if games.isdigit() and int(games) > 0:
+            return int(games)
         else:
             messagebox.showerror('Error!', 'Number of games should be higher than 0!')
             self.select_difficult()
@@ -286,6 +290,48 @@ class MainWindow(tk.Frame):
         self.profile['config']['games'] = games
         with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as file:
             json.dump(self.profile, file)
+
+    # custom mode (create new window for inputting values)
+    def custom_frame(self):
+        # append frame
+        right_frame = tk.Frame(self.select_difficult_window)
+        right_frame.pack(anchor='e', side='right')
+        questions_frame = tk.Frame(right_frame)
+        questions_frame.pack()
+        # how many colours
+        colours_ask = tk.Label(questions_frame, text='How many colours?')
+        colours_ask.grid(column=0, row=0)
+        self.colours = tk.IntVar()
+        colours_spin = tk.Spinbox(questions_frame, from_=1, to=8, width=3, textvariable=self.colours)
+        colours_spin.grid(column=1, row=0)
+        # how many holes
+        holes_ask = tk.Label(questions_frame, text='How many holes?')
+        holes_ask.grid(column=0, row=1)
+        self.holes = tk.IntVar()
+        holes_spin = tk.Spinbox(questions_frame, from_=1, to=10, width=3, textvariable=self.holes)
+        holes_spin.grid(column=1, row=1)
+        # how many rounds
+        rounds_ask = tk.Label(questions_frame, text='How many rounds?')
+        rounds_ask.grid(column=0, row=2)
+        self.rounds = tk.IntVar()
+        rounds_spin = tk.Spinbox(questions_frame, from_=1, to=100, width=3, textvariable=self.rounds)
+        rounds_spin.grid(column=1, row=2)
+        # submit button
+        submit_button = tk.Button(right_frame, text='Submit', command=self.custom)
+        submit_button.pack(side='bottom', anchor='s')
+
+    # custom
+    def custom(self):
+        games = self.check_games()
+        if (0 < self.colours.get() < 9) and (0 < self.holes.get() < 11) and (0 < self.rounds.get() < 100):
+            self.profile['config']['colours'] = self.colours.get()
+            self.profile['config']['holes'] = self.holes.get()
+            self.profile['config']['rounds'] = self.rounds.get()
+            self.profile['config']['games'] = games
+            with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as file:
+                json.dump(self.profile, file)
+        else:
+            messagebox.showerror('Error!', 'Please, enter valid inputs!')
 
     # create game window
     def game_window(self):
