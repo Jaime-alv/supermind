@@ -143,7 +143,7 @@ class MainWindow(tk.Frame):
         user = self.user_name.get()
         if user != '':
             with pathlib.Path(f'profiles\\{user}.txt').open('w') as file:
-                json.dump({'name': user}, file)
+                json.dump({'name': user, 'continue': True}, file)
             self.new_profile_window.destroy()
         else:
             messagebox.showerror('Error!', "Name can't be empty!")
@@ -157,15 +157,32 @@ class MainWindow(tk.Frame):
             self.terminate(self.load_profile_window, self.load_profile_window, 'Close window')
             for index in range(len(self.profile_list)):
                 button_with_name = tk.Button(self.load_profile_window, text=self.profile_list[index],
-                                             command=lambda i=index: self.print_this(self.profile_list[i]))
+                                             command=lambda i=index: self.load_this(self.profile_list[i]))
                 button_with_name.pack(anchor='w')
         else:
             messagebox.showerror('Error!', 'Create a profile first.')
             self.create_new_profile()
 
-    def print_this(self, name):
+    def load_this(self, name):
         self.player = name
+        with pathlib.Path(f'profiles\\{name}.txt').open('r') as file:
+            self.profile = json.load(file)
+        if self.profile.get('continue', None):
+            message = 'There is a game going.\nWould you like to continue it?'
+            if messagebox.askyesno('Continue', message=message):
+                self.load_game()
+            else:
+                self.select_difficult()
+                self.profile['continue'] = False
+                with pathlib.Path(f'profiles\\{name}.txt').open('w') as overwrite:
+                    json.dump(self.profile, overwrite)
+            self.load_profile_window.destroy()
+        else:
+            self.select_difficult()
         self.load_profile_window.destroy()
+
+    def load_game(self):
+        print('Continue')
 
     # Delete an existing profile
     def delete_profile(self):
