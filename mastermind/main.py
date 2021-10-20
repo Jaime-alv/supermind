@@ -323,7 +323,7 @@ class MainWindow(tk.Frame):
     # custom
     def custom(self):
         games = self.check_games()
-        if (0 < self.colours.get() < 9) and (0 < self.holes.get() < 11) and (0 < self.rounds.get() < 100):
+        if (0 < self.colours.get() < 9) and (0 < self.holes.get() < 11) and (0 < self.rounds.get() < 101):
             self.profile['config']['colours'] = self.colours.get()
             self.profile['config']['holes'] = self.holes.get()
             self.profile['config']['rounds'] = self.rounds.get()
