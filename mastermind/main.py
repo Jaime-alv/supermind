@@ -5,6 +5,8 @@ import tkinter as tk
 import json
 import re
 from tkinter import messagebox
+from tkinter import ttk
+import logging
 
 
 # white = right colour, bad position
@@ -143,14 +145,14 @@ class MainWindow(tk.Frame):
         user = self.user_name.get()
         data = {'name': user,
                 'config': {
+                    'difficulty': '',
                     'colours': 0,
                     'holes': 0,
                     'rounds': 0,
-                    'games': 0
-                },
+                    'games': 0},
                 'continue': {'bool': False, 'game': {}},
                 'easy': {},
-                'medium': {},
+                'normal': {},
                 'hard': {},
                 'custom': {}}
         if not pathlib.Path('profiles').exists():
@@ -184,7 +186,7 @@ class MainWindow(tk.Frame):
         if self.profile['continue'].get('bool', None):
             message = 'There is a game going.\nWould you like to continue it?'
             if messagebox.askyesno('Continue', message=message):
-                self.load_game()
+                self.game_window()
             else:
                 self.select_difficult()
                 self.profile['continue']['bool'] = False
@@ -195,9 +197,6 @@ class MainWindow(tk.Frame):
         else:
             self.select_difficult()
         self.load_profile_window.destroy()
-
-    def load_game(self):
-        print('Continue')
 
     # Delete an existing profile
     def delete_profile(self):
@@ -231,9 +230,9 @@ class MainWindow(tk.Frame):
             # easy (6 colours, 3 holes)
             easy = tk.Button(four_buttons, text='Easy', command=self.easy)
             easy.grid(column=0, row=0)
-            # medium (6 colours, 4 holes)
-            medium = tk.Button(four_buttons, text='Medium', command=self.medium)
-            medium.grid(column=0, row=1)
+            # normal (6 colours, 4 holes)
+            normal = tk.Button(four_buttons, text='normal', command=self.normal)
+            normal.grid(column=0, row=1)
             # hard (8 colours, 5 holes)
             hard = tk.Button(four_buttons, text='Hard', command=self.hard)
             hard.grid(column=1, row=0)
@@ -264,32 +263,38 @@ class MainWindow(tk.Frame):
     # easy
     def easy(self):
         games = self.check_games()
+        self.profile['config']['difficulty'] = 'easy'
         self.profile['config']['colours'] = 6
         self.profile['config']['holes'] = 3
         self.profile['config']['rounds'] = 12
         self.profile['config']['games'] = games
         with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as file:
             json.dump(self.profile, file)
+        self.game_window()
 
-    # medium
-    def medium(self):
+    # normal
+    def normal(self):
         games = self.check_games()
+        self.profile['config']['difficulty'] = 'normal'
         self.profile['config']['colours'] = 6
         self.profile['config']['holes'] = 4
         self.profile['config']['rounds'] = 12
         self.profile['config']['games'] = games
         with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as file:
             json.dump(self.profile, file)
+        self.game_window()
 
     # hard
     def hard(self):
         games = self.check_games()
+        self.profile['config']['difficulty'] = 'hard'
         self.profile['config']['colours'] = 8
         self.profile['config']['holes'] = 5
         self.profile['config']['rounds'] = 14
         self.profile['config']['games'] = games
         with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as file:
             json.dump(self.profile, file)
+        self.game_window()
 
     # custom mode (create new window for inputting values)
     def custom_frame(self):
@@ -302,18 +307,21 @@ class MainWindow(tk.Frame):
         colours_ask = tk.Label(questions_frame, text='How many colours?')
         colours_ask.grid(column=0, row=0)
         self.colours = tk.IntVar()
+        self.colours.set(5)
         colours_spin = tk.Spinbox(questions_frame, from_=1, to=8, width=3, textvariable=self.colours)
         colours_spin.grid(column=1, row=0)
         # how many holes
         holes_ask = tk.Label(questions_frame, text='How many holes?')
         holes_ask.grid(column=0, row=1)
         self.holes = tk.IntVar()
+        self.holes.set(5)
         holes_spin = tk.Spinbox(questions_frame, from_=1, to=10, width=3, textvariable=self.holes)
         holes_spin.grid(column=1, row=1)
         # how many rounds
         rounds_ask = tk.Label(questions_frame, text='How many rounds?')
         rounds_ask.grid(column=0, row=2)
         self.rounds = tk.IntVar()
+        self.rounds.set(20)
         rounds_spin = tk.Spinbox(questions_frame, from_=1, to=100, width=3, textvariable=self.rounds)
         rounds_spin.grid(column=1, row=2)
         # submit button
@@ -324,12 +332,14 @@ class MainWindow(tk.Frame):
     def custom(self):
         games = self.check_games()
         if (0 < self.colours.get() < 9) and (0 < self.holes.get() < 11) and (0 < self.rounds.get() < 101):
+            self.profile['config']['difficulty'] = 'custom'
             self.profile['config']['colours'] = self.colours.get()
             self.profile['config']['holes'] = self.holes.get()
             self.profile['config']['rounds'] = self.rounds.get()
             self.profile['config']['games'] = games
             with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as file:
                 json.dump(self.profile, file)
+            self.game_window()
         else:
             messagebox.showerror('Error!', 'Please, enter valid inputs!')
 
@@ -337,19 +347,58 @@ class MainWindow(tk.Frame):
     def game_window(self):
         game_window = tk.Tk()
         game_window.title('Megamind')
-        GameWindow(game_window)
+        GameWindow(game_window, self.player)
         self.master.destroy()
 
 
 class GameWindow(tk.Frame):
-    def __init__(self, master):
+    def __init__(self, master, player):
         super().__init__(master)
         self.master = master
         self.pack(expand=1, fill='both')
-        label = tk.Label(self, text='Hello')
-        label.pack()
+        with pathlib.Path(f'profiles\\{player}.txt').open('r') as read:
+            self.profile = json.load(read)
+        self.colours = []
+        self.secret = []
+        self.select_colours()
+        self.board_frame_window()
         close = tk.Button(self, text='Close', command=self.close)
-        close.pack()
+        close.pack(side='bottom')
+
+    # read number of colours game is going to use, and append to a list
+    # randomize colours and get secret code
+    def select_colours(self):
+        colour_list = ['red', 'blue', 'green', 'yellow', 'orange', 'indigo', 'violet', 'white']
+        for n in range(self.profile['config'].get('colours')):
+            self.colours.append(colour_list[n])
+        logging.debug(self.colours)
+        while len(self.secret) < self.profile['config'].get('holes'):
+            colour = random.choice(self.colours)
+            self.secret.append(colour)
+        logging.debug(self.secret)
+
+    def board_frame_window(self):
+        board_colour = '#42413e'
+        secret_frame = tk.Frame(self, bg=board_colour)
+        secret_frame.pack(side='top', expand=1, fill='both')
+        # print pc code
+        rows = self.profile['config'].get('holes')
+        for n in range(rows):
+            label = tk.Label(secret_frame, text=self.secret[n], fg=self.secret[n], bg=board_colour)
+            label.grid(column=n, row=0, padx=1)
+        # player frame
+        player_frame = tk.Frame(self, bg=board_colour)
+        player_frame.pack(side='top', anchor='s', expand=1, fill='both')
+        for n in range(rows):
+            combo = ttk.Combobox(player_frame, width=6, values=self.colours)
+            combo.grid(column=n, row=0)
+            combo.bind("<<ComboboxSelected>>", lambda event, index=n, colour=combo.get(): self.choice_sel(index, event, colour))
+
+    def choice_sel(self, index, event, colour):
+        print(index)
+        print(event)
+        print(colour)
+
 
     def close(self):
         self.master.destroy()
@@ -358,6 +407,9 @@ class GameWindow(tk.Frame):
 
 
 if __name__ == '__main__':
+    logging.basicConfig(filename='..\\tests\\log.txt', level=logging.DEBUG,
+                        format='%(asctime)s - %(levelname)s - %(message)s')
+    pathlib.Path('..\\tests\\log.txt').open('w')
     window = tk.Tk()
     app = MainWindow(window)
     app.mainloop()
