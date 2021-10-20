@@ -141,9 +141,17 @@ class MainWindow(tk.Frame):
 
     def create_json(self):
         user = self.user_name.get()
+        data = {'name': user,
+                'continue': {'bool': False, 'game': ''},
+                'easy': {},
+                'medium': {},
+                'hard': {},
+                'custom': {}}
+        if not pathlib.Path('profiles').exists():
+            pathlib.Path('profiles').mkdir(exist_ok=True)
         if user != '':
             with pathlib.Path(f'profiles\\{user}.txt').open('w') as file:
-                json.dump({'name': user, 'continue': True}, file)
+                json.dump(data, file)
             self.new_profile_window.destroy()
         else:
             messagebox.showerror('Error!', "Name can't be empty!")
