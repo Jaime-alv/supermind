@@ -121,6 +121,8 @@ class MainWindow(tk.Frame):
         load_profile.pack()
         delete_profile = tk.Button(self, text='Delete profile', command=self.delete_profile)
         delete_profile.pack()
+        play_game = tk.Button(self, text='New game', command=self.game_window)
+        play_game.pack()
 
     # create a new profile
     def create_new_profile(self):
@@ -175,6 +177,29 @@ class MainWindow(tk.Frame):
         pathlib.Path.unlink(pathlib.Path(f'profiles\\{i}.txt'), missing_ok=True)
         self.delete_profile_window.destroy()
         self.delete_profile()
+
+    # create game window
+    def game_window(self):
+        game_window = tk.Tk()
+        game_window.title('Megamind')
+        GameWindow(game_window)
+        self.master.destroy()
+
+
+class GameWindow(tk.Frame):
+    def __init__(self, master):
+        super().__init__(master)
+        self.master = master
+        self.pack(expand=1, fill='both')
+        label = tk.Label(self, text='Hello')
+        label.pack()
+        close = tk.Button(self, text='Close', command=self.close)
+        close.pack()
+
+    def close(self):
+        self.master.destroy()
+        recall_window = tk.Tk()
+        MainWindow(recall_window)
 
 
 if __name__ == '__main__':
