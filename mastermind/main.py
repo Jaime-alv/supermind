@@ -68,7 +68,7 @@ class Game:
         self.round += 1
 
 
-class GameWindow(tk.Frame):
+class MainWindow(tk.Frame):
     def __init__(self, master):
         super().__init__(master)
         self.profile_list = []
@@ -179,5 +179,5 @@ class GameWindow(tk.Frame):
 
 if __name__ == '__main__':
     window = tk.Tk()
-    app = GameWindow(window)
+    app = MainWindow(window)
     app.mainloop()
