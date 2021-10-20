@@ -142,7 +142,13 @@ class MainWindow(tk.Frame):
     def create_json(self):
         user = self.user_name.get()
         data = {'name': user,
-                'continue': {'bool': False, 'game': ''},
+                'config': {
+                    'colours': 0,
+                    'holes': 0,
+                    'rounds': 0,
+                    'games': 0
+                },
+                'continue': {'bool': False, 'game': {}},
                 'easy': {},
                 'medium': {},
                 'hard': {},
@@ -175,13 +181,14 @@ class MainWindow(tk.Frame):
         self.player = name
         with pathlib.Path(f'profiles\\{name}.txt').open('r') as file:
             self.profile = json.load(file)
-        if self.profile.get('continue', None):
+        if self.profile['continue'].get('bool', None):
             message = 'There is a game going.\nWould you like to continue it?'
             if messagebox.askyesno('Continue', message=message):
                 self.load_game()
             else:
                 self.select_difficult()
-                self.profile['continue'] = False
+                self.profile['continue']['bool'] = False
+                self.profile['continue']['game'].clear()
                 with pathlib.Path(f'profiles\\{name}.txt').open('w') as overwrite:
                     json.dump(self.profile, overwrite)
             self.load_profile_window.destroy()
@@ -210,7 +217,6 @@ class MainWindow(tk.Frame):
     def del_this(self, i):
         pathlib.Path.unlink(pathlib.Path(f'profiles\\{i}.txt'), missing_ok=True)
         self.delete_profile_window.destroy()
-        self.delete_profile()
 
     # select difficult panel
     def select_difficult(self):
@@ -220,13 +226,13 @@ class MainWindow(tk.Frame):
             self.select_frame = tk.Frame(self.select_difficult_window)
             self.select_frame.pack()
             # easy (6 colours, 3 holes)
-            easy = tk.Button(self.select_frame, text='Easy')
+            easy = tk.Button(self.select_frame, text='Easy', command=self.easy)
             easy.grid(column=0, row=0)
             # medium (6 colours, 4 holes)
-            medium = tk.Button(self.select_frame, text='Medium')
+            medium = tk.Button(self.select_frame, text='Medium', command=self.medium)
             medium.grid(column=0, row=1)
             # hard (8 colours, 5 holes)
-            hard = tk.Button(self.select_frame, text='Hard')
+            hard = tk.Button(self.select_frame, text='Hard', command=self.hard)
             hard.grid(column=1, row=0)
             # custom (up to 8 colours, up to 8 holes?)
             custom = tk.Button(self.select_frame, text='Custom')
@@ -242,9 +248,44 @@ class MainWindow(tk.Frame):
         else:
             messagebox.showerror('Error!', 'Load a profile first!')
 
+    # check number of games is higher than 0
+    def check_games(self):
+        games = self.games.get()
+        if games > 0:
+            return games
+        else:
+            messagebox.showerror('Error!', 'Number of games should be higher than 0!')
+            self.select_difficult()
+
     # easy
     def easy(self):
-        print('Hi')
+        games = self.check_games()
+        self.profile['config']['colours'] = 6
+        self.profile['config']['holes'] = 3
+        self.profile['config']['rounds'] = 12
+        self.profile['config']['games'] = games
+        with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as file:
+            json.dump(self.profile, file)
+
+    # medium
+    def medium(self):
+        games = self.check_games()
+        self.profile['config']['colours'] = 6
+        self.profile['config']['holes'] = 4
+        self.profile['config']['rounds'] = 12
+        self.profile['config']['games'] = games
+        with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as file:
+            json.dump(self.profile, file)
+
+    # hard
+    def hard(self):
+        games = self.check_games()
+        self.profile['config']['colours'] = 8
+        self.profile['config']['holes'] = 5
+        self.profile['config']['rounds'] = 14
+        self.profile['config']['games'] = games
+        with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as file:
+            json.dump(self.profile, file)
 
     # create game window
     def game_window(self):
