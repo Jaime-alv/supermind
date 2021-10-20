@@ -6,4 +6,5 @@ tests/
 __pycache__/
 
 # profiles
+profiles/
 profiles/*
