@@ -73,6 +73,7 @@ class MainWindow(tk.Frame):
         super().__init__(master)
         self.profile_list = []
         self.for_delete = []
+        self.player = ''
         self.master = master
         self.master.title('Mastermind')
         self.master.geometry('250x250')
@@ -121,7 +122,7 @@ class MainWindow(tk.Frame):
         load_profile.pack()
         delete_profile = tk.Button(self, text='Delete profile', command=self.delete_profile)
         delete_profile.pack()
-        play_game = tk.Button(self, text='New game', command=self.game_window)
+        play_game = tk.Button(self, text='New game', command=self.select_difficult)
         play_game.pack()
 
     # create a new profile
@@ -129,7 +130,7 @@ class MainWindow(tk.Frame):
         self.new_profile_window = tk.Toplevel(self)
         self.new_profile_window.title('New profile')
         self.terminate(self.new_profile_window, self.new_profile_window, 'Close window')
-        label = tk.Label(self.new_profile_window, text='Enter your name')
+        label = tk.Label(self.new_profile_window, text='Enter your name:')
         label.pack()
         self.user_name = tk.StringVar()
         name_entry = tk.Entry(self.new_profile_window, textvariable=self.user_name)
@@ -149,34 +150,76 @@ class MainWindow(tk.Frame):
 
     # load an existing profile
     def load_profile(self):
-        self.load_profile_window = tk.Toplevel(self)
-        self.load_profile_window.title('Select a profile')
-        self.terminate(self.load_profile_window, self.load_profile_window, 'Close window')
         self.create_profile_list()
-        for index in range(len(self.profile_list)):
-            button_with_name = tk.Button(self.load_profile_window, text=self.profile_list[index],
-                                         command=lambda i=index: self.print_this(self.profile_list[i]))
-            button_with_name.pack(anchor='w')
+        if len(self.profile_list) != 0:
+            self.load_profile_window = tk.Toplevel(self)
+            self.load_profile_window.title('Select a profile')
+            self.terminate(self.load_profile_window, self.load_profile_window, 'Close window')
+            for index in range(len(self.profile_list)):
+                button_with_name = tk.Button(self.load_profile_window, text=self.profile_list[index],
+                                             command=lambda i=index: self.print_this(self.profile_list[i]))
+                button_with_name.pack(anchor='w')
+        else:
+            messagebox.showerror('Error!', 'Create a profile first.')
+            self.create_new_profile()
 
     def print_this(self, name):
-        print(name)
+        self.player = name
         self.load_profile_window.destroy()
 
     # Delete an existing profile
     def delete_profile(self):
-        self.delete_profile_window = tk.Toplevel(self)
-        self.delete_profile_window.title('Delete profile')
-        self.terminate(self.delete_profile_window, self.delete_profile_window, 'Close window')
         self.create_profile_list()
-        for index in range(len(self.profile_list)):
-            button_with_name = tk.Button(self.delete_profile_window, text=self.profile_list[index],
-                                         command=lambda i=index: self.del_this(self.profile_list[i]))
-            button_with_name.pack(anchor='w', padx=5, pady=5, ipady=5)
+        if len(self.profile_list) > 0:
+            self.delete_profile_window = tk.Toplevel(self)
+            self.delete_profile_window.title('Delete profile')
+            self.terminate(self.delete_profile_window, self.delete_profile_window, 'Close window')
+            for index in range(len(self.profile_list)):
+                button_with_name = tk.Button(self.delete_profile_window, text=self.profile_list[index],
+                                             command=lambda i=index: self.del_this(self.profile_list[i]))
+                button_with_name.pack(anchor='w', padx=5, pady=5, ipady=5)
+        else:
+            messagebox.showerror('Error!', 'There are no profiles.\nCreate a new profile first.')
+            self.create_new_profile()
 
     def del_this(self, i):
         pathlib.Path.unlink(pathlib.Path(f'profiles\\{i}.txt'), missing_ok=True)
         self.delete_profile_window.destroy()
         self.delete_profile()
+
+    # select difficult panel
+    def select_difficult(self):
+        if self.player != '':
+            self.select_difficult_window = tk.Toplevel(self)
+            self.select_difficult_window.title('Choose your level')
+            self.select_frame = tk.Frame(self.select_difficult_window)
+            self.select_frame.pack()
+            # easy (6 colours, 3 holes)
+            easy = tk.Button(self.select_frame, text='Easy')
+            easy.grid(column=0, row=0)
+            # medium (6 colours, 4 holes)
+            medium = tk.Button(self.select_frame, text='Medium')
+            medium.grid(column=0, row=1)
+            # hard (8 colours, 5 holes)
+            hard = tk.Button(self.select_frame, text='Hard')
+            hard.grid(column=1, row=0)
+            # custom (up to 8 colours, up to 8 holes?)
+            custom = tk.Button(self.select_frame, text='Custom')
+            custom.grid(column=1, row=1)
+            # ask for number of games
+            games_label = tk.Label(text="How many games will be playing?")
+            self.games = tk.IntVar()
+            self.games.set(3)
+            entry = tk.Entry(self.select_difficult_window, textvariable=self.games)
+            entry.focus()
+            self.terminate(self.select_difficult_window, self.select_difficult_window, 'Close window')
+            entry.pack(pady=5, padx=10, anchor='n', side='bottom', ipady=4)
+        else:
+            messagebox.showerror('Error!', 'Load a profile first!')
+
+    # easy
+    def easy(self):
+        print('Hi')
 
     # create game window
     def game_window(self):
