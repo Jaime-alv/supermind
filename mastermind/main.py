@@ -79,6 +79,7 @@ class GameWindow(tk.Frame):
         self.pack(expand=1, fill='both')
         self.terminate(self, self.master, 'Close game')
         self.main_window()
+        self.create_menu()
 
     # create profile_list
     def create_profile_list(self):
@@ -95,6 +96,22 @@ class GameWindow(tk.Frame):
         close_program['padx'] = 5
         close_program['pady'] = 5
         close_program.pack(side='bottom')
+
+    # create menu
+    def create_menu(self):
+        menu = tk.Menu(self.master)
+
+        new_item = tk.Menu(menu, tearoff=0)
+        new_item.add_command(label='New profile', command=self.create_new_profile)
+        new_item.add_command(label='Load profile', command=self.load_profile)
+        new_item.add_command(label='Delete profile', command=self.delete_profile)
+        new_item.add_separator()
+        new_item.add_command(label='About')
+        new_item.add_separator()
+        new_item.add_command(label='Close', command=self.master.destroy)
+
+        menu.add_cascade(label='Options', menu=new_item)
+        self.master.config(menu=menu)
 
     # create main frame
     def main_window(self):
@@ -127,7 +144,6 @@ class GameWindow(tk.Frame):
             self.new_profile_window.destroy()
         else:
             messagebox.showerror('Error!', "Name can't be empty!")
-
 
     # load an existing profile
     def load_profile(self):
