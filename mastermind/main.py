@@ -396,14 +396,12 @@ class GameWindow(tk.Frame):
         logging.debug(self.colour_dict)
 
     def board_frame_window(self):
-        board_colour = '#42413e'  # color code for board
-
         # board's left side (secret code, answer and game state)
-        left_frame = tk.Frame(self)
-        left_frame.pack(side='left')
+        self.left_frame = tk.Frame(self)
+        self.left_frame.pack(side='left')
 
         # secret code frame
-        secret_frame = tk.Frame(left_frame, bg=board_colour)
+        secret_frame = tk.Frame(self.left_frame, bg=board_colour)
         secret_frame.pack(side='top', expand=1, fill='both')
 
         # print pc code
@@ -412,20 +410,16 @@ class GameWindow(tk.Frame):
             label.grid(column=n, row=0, padx=1, pady=1, ipadx=38)
 
         # rounds frame (center frame with all player solutions)
-        center_frame = tk.Frame(left_frame, bg=board_colour)
-        center_frame.pack()
-
-        for game_round in range(self.rounds):
-            player_result = tk.Label(center_frame, bg='white')
-            player_result.grid(column=0, row=game_round,)
+        self.print_save_board()
 
         # answer frame
-        player_frame = tk.Frame(left_frame, bg=board_colour)
-        player_frame.pack(side='top', anchor='s', expand=1, fill='both')
+        player_frame = tk.Frame(self.left_frame, bg=board_colour)
+        player_frame.pack(side='bottom', anchor='s', expand=1, fill='both')
 
         for n in range(self.holes):
             combo = ttk.Combobox(player_frame, width=10, values=self.colours, state="readonly")
             combo.grid(column=n, row=0, padx=1)
+            #combo.current(0)
             combo.bind("<<ComboboxSelected>>", lambda event, i=n: self.choice_sel(event, i))
 
         # board's right side (buttons, round, game)
@@ -457,26 +451,59 @@ class GameWindow(tk.Frame):
     def compare_player(self):
         logging.info(f'Player choice in round {self.round} = {self.colour_dict}')
         results = []  # Result from comparing player against secret code: black, white or None
-        choice = []  # Player choice in list form for saving game estate
+        choice = dict(self.colour_dict)  # Player choice in list form for saving game estate
+        results_dict = {}
         for c in self.colour_dict:
-            choice.append(self.colour_dict.get(c))
             if self.colour_dict.get(c) == self.secret[c]:
+                results_dict.setdefault(c, 'black')
                 results.append('black')
             elif self.colour_dict.get(c) != self.secret[c] and (self.colour_dict.get(c) in self.secret):
+                results_dict.setdefault(c, 'white')
                 results.append('white')
             else:
+                results_dict.setdefault(c, None)
                 results.append(None)
 
         # save game state
-        self.game['player'].setdefaul(self.round, {})
+        self.game['player'].setdefault(self.round, {})
         self.game['player'][self.round].setdefault('choice', choice)
-        self.game['player'][self.round].setdefault('result', results)
+        self.game['player'][self.round].setdefault('result', results_dict)
 
         # add one round to the counter
         self.round += 1
         self.round_text_call_frame.destroy()
         self.round_text_call()
+        self.center_frame.destroy()
+        self.print_save_board()
         logging.warning(f'Result = {results}')
+        logging.critical(self.game)
+
+    def print_save_board(self):
+        self.center_frame = tk.Frame(self.left_frame, bg='black')
+        self.center_frame.pack(side='top', anchor='n')
+        for game_round in range(1, (self.rounds * 2) + 1):
+            row = ((self.rounds * 2) + 1) - game_round
+            if game_round % 2 != 0:
+                for peg in range(self.holes):
+                    try:
+                        text = self.game['player'][(game_round//2)+1]['choice'].get(peg, None)
+                    except KeyError:
+                        text = None
+                    if text is None:
+                        text = board_colour
+                    player_result = tk.Label(self.center_frame, bg=text)
+                    player_result.grid(column=peg, row=row, padx=1, pady=1, ipadx=38)
+            elif game_round % 2 == 0:
+                for peg in range(self.holes):
+                    try:
+                        text = self.game['player'][(game_round//2)]['result'].get(peg, None)
+                    except KeyError:
+                        text = None
+                    if text is None:
+                        text = board_colour
+                    player_result = tk.Label(self.center_frame, bg=text)
+                    player_result.grid(column=peg, row=row, padx=1, pady=1, ipadx=38)
+
 
     def close(self):
         self.master.destroy()
@@ -488,6 +515,7 @@ if __name__ == '__main__':
     logging.basicConfig(filename='..\\tests\\log.txt', level=logging.DEBUG,
                         format='%(asctime)s - %(levelname)s - %(message)s')
     pathlib.Path('..\\tests\\log.txt').open('w')
+    board_colour = '#42413e'  # color code for board
     window = tk.Tk()
     app = MainWindow(window)
     app.mainloop()
