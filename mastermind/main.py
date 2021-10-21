@@ -419,7 +419,6 @@ class GameWindow(tk.Frame):
         for n in range(self.holes):
             combo = ttk.Combobox(player_frame, width=10, values=self.colours, state="readonly")
             combo.grid(column=n, row=0, padx=1)
-            #combo.current(0)
             combo.bind("<<ComboboxSelected>>", lambda event, i=n: self.choice_sel(event, i))
 
         # board's right side (buttons, round, game)
@@ -434,7 +433,7 @@ class GameWindow(tk.Frame):
         self.round_text_call()
 
         # submit button
-        submit = tk.Button(self.right_frame, text="Submit", command=self.compare_player)
+        submit = tk.Button(self.right_frame, text="Submit", command=self.everything_ok)
         submit.pack(anchor='s', side='bottom')
 
     def round_text_call(self):
@@ -446,6 +445,11 @@ class GameWindow(tk.Frame):
     # save player's choice in a dictionary so it can be checked later
     def choice_sel(self, event, i):
         self.colour_dict[i] = event.widget.get()
+
+    # form validation from submit button
+    def everything_ok(self):
+        if all(self.colour_dict.get(c) != '' for c in self.colour_dict):
+            self.compare_player()
 
     # compare player against secret code
     def compare_player(self):
@@ -478,6 +482,9 @@ class GameWindow(tk.Frame):
         logging.warning(f'Result = {results}')
         logging.critical(self.game)
 
+    # print board and past choices, from bottom to top
+    # uneven rows are player choices
+    # even rows are the result from comparing player choices against the secret code
     def print_save_board(self):
         self.center_frame = tk.Frame(self.left_frame, bg='black')
         self.center_frame.pack(side='top', anchor='n')
@@ -486,7 +493,7 @@ class GameWindow(tk.Frame):
             if game_round % 2 != 0:
                 for peg in range(self.holes):
                     try:
-                        text = self.game['player'][(game_round//2)+1]['choice'].get(peg, None)
+                        text = self.game['player'][(game_round // 2) + 1]['choice'].get(peg, None)
                     except KeyError:
                         text = None
                     if text is None:
@@ -496,14 +503,13 @@ class GameWindow(tk.Frame):
             elif game_round % 2 == 0:
                 for peg in range(self.holes):
                     try:
-                        text = self.game['player'][(game_round//2)]['result'].get(peg, None)
+                        text = self.game['player'][(game_round // 2)]['result'].get(peg, None)
                     except KeyError:
                         text = None
                     if text is None:
                         text = board_colour
                     player_result = tk.Label(self.center_frame, bg=text)
                     player_result.grid(column=peg, row=row, padx=1, pady=1, ipadx=38)
-
 
     def close(self):
         self.master.destroy()
