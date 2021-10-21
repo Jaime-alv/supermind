@@ -358,8 +358,19 @@ class GameWindow(tk.Frame):
         self.pack(expand=1, fill='both')
         with pathlib.Path(f'profiles\\{player}.txt').open('r') as read:
             self.profile = json.load(read)
-        self.colours = []
-        self.secret = []
+
+        # unpack all fields
+        self.holes = self.profile['config'].get('holes')
+        self.rounds = self.profile['config'].get('rounds')
+        self.games = self.profile['config'].get('games')
+        self.dif = self.profile['config'].get('difficulty')
+
+        self.colour_dict = {}  # place for storing player choice until hit 'submit'
+        self.colours = []  # available colours for the current game
+        self.secret = []  # secret color code player needs to get
+        self.results = []  # Result from comparing player against secret code: black, white or None
+        self.round = 1  # Current round
+        self.game = 1  # Current game
         self.select_colours()
         self.board_frame_window()
         close = tk.Button(self, text='Close', command=self.close)
@@ -372,33 +383,80 @@ class GameWindow(tk.Frame):
         for n in range(self.profile['config'].get('colours')):
             self.colours.append(colour_list[n])
         logging.debug(self.colours)
-        while len(self.secret) < self.profile['config'].get('holes'):
+        while len(self.secret) < self.holes:
             colour = random.choice(self.colours)
             self.secret.append(colour)
-        logging.debug(self.secret)
+        logging.critical(self.secret)
+        # create dict with n colours for storing player choice
+        for n in range(self.holes):
+            self.colour_dict.setdefault(n, '')
+        logging.debug(self.colour_dict)
 
     def board_frame_window(self):
-        board_colour = '#42413e'
-        secret_frame = tk.Frame(self, bg=board_colour)
+        board_colour = '#42413e'  # color code for board
+
+        # board's left side (secret code, answer and game state)
+        left_frame = tk.Frame(self)
+        left_frame.pack(side='left')
+
+        # secret code frame
+        secret_frame = tk.Frame(left_frame, bg=board_colour)
         secret_frame.pack(side='top', expand=1, fill='both')
+
         # print pc code
-        rows = self.profile['config'].get('holes')
-        for n in range(rows):
-            label = tk.Label(secret_frame, text=self.secret[n], fg=self.secret[n], bg=board_colour)
-            label.grid(column=n, row=0, padx=1)
-        # player frame
-        player_frame = tk.Frame(self, bg=board_colour)
+        for n in range(self.holes):
+            label = tk.Label(secret_frame, text='', fg='black', bg=self.secret[n])
+            label.grid(column=n, row=0, padx=1, pady=1, ipadx=38)
+
+        # answer frame
+        player_frame = tk.Frame(left_frame, bg=board_colour)
         player_frame.pack(side='top', anchor='s', expand=1, fill='both')
-        for n in range(rows):
-            combo = ttk.Combobox(player_frame, width=6, values=self.colours)
-            combo.grid(column=n, row=0)
-            combo.bind("<<ComboboxSelected>>", lambda event, index=n, colour=combo.get(): self.choice_sel(index, event, colour))
 
-    def choice_sel(self, index, event, colour):
-        print(index)
-        print(event)
-        print(colour)
+        for n in range(self.holes):
+            combo = ttk.Combobox(player_frame, width=10, values=self.colours, state="readonly")
+            combo.grid(column=n, row=0, padx=1)
+            combo.bind("<<ComboboxSelected>>", lambda event, i=n: self.choice_sel(event, i))
 
+        # board's right side (buttons, round, game)
+        self.right_frame = tk.Frame(self)
+        self.right_frame.pack(side='right')
+
+        # game counter
+        game_label = tk.Label(self.right_frame, text=f'Game #:{self.game}')
+        game_label.pack()
+
+        # round counter
+        self.round_frame_call()
+
+        # submit button
+        submit = tk.Button(self.right_frame, text="Submit", command=self.compare_player)
+        submit.pack(anchor='s', side='bottom')
+
+    def round_frame_call(self):
+        self.round_frame = tk.Frame(self.right_frame)
+        self.round_frame.pack()
+        round_label = tk.Label(self.round_frame, text=f'Round #:{self.round}')
+        round_label.pack()
+
+    # save player's choice in a dictionary so it can be checked later
+    def choice_sel(self, event, i):
+        self.colour_dict[i] = event.widget.get()
+
+    # compare player against secret code
+    def compare_player(self):
+        logging.info(f'Player choice in round {self.round} = {self.colour_dict}')
+        self.results.clear()  # clear all entries before using it again
+        for c in self.colour_dict:
+            if self.colour_dict.get(c) == self.secret[c]:
+                self.results.append('black')
+            elif self.colour_dict.get(c) != self.secret[c] and (self.colour_dict.get(c) in self.secret):
+                self.results.append('white')
+            else:
+                self.results.append(None)
+        self.round += 1  # add one round to the counter
+        self.round_frame.destroy()
+        self.round_frame_call()
+        logging.warning(f'Result = {self.results}')
 
     def close(self):
         self.master.destroy()
