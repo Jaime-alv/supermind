@@ -455,13 +455,23 @@ class GameWindow(tk.Frame):
     def compare_player(self):
         logging.info(f'Player choice in round {self.round} = {self.colour_dict}')
         results = []  # Result from comparing player against secret code: black, white or None
-        choice = dict(self.colour_dict)  # Player choice in list form for saving game estate
+        choice = dict(self.colour_dict)  # Player choice in dict form for saving game estate
+        # now I need a list for counting items, if player puts 2 of the same colour and secret has only one, only one
+        # peg in result should be displayed
+        secret = list(self.secret)  # Need a new list I can modify for already used colours.
         results_dict = {}
         for c in self.colour_dict:
-            if self.colour_dict.get(c) == self.secret[c]:
+            if self.colour_dict.get(c) == secret[c]:
                 results_dict.setdefault(c, 'black')
                 results.append('black')
-            elif self.colour_dict.get(c) != self.secret[c] and (self.colour_dict.get(c) in self.secret):
+                secret[c] = 'used'
+            elif self.colour_dict.get(c) != secret[c] and (self.colour_dict.get(c) in secret):
+                value = 0
+                for y in range(len(secret)):
+                    if self.colour_dict.get(c) == secret[y]:
+                        value = y
+                        break
+                secret[value] = 'used'
                 results_dict.setdefault(c, 'white')
                 results.append('white')
             else:
