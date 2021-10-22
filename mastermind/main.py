@@ -12,75 +12,19 @@ import logging
 # white = right colour, bad position
 # black = right colour, right position
 
-class Game:
+
+class MainWindow(tk.Tk):
     def __init__(self):
-        self.colours = ['red', 'blue', 'green', 'yellow', 'orange', 'indigo', 'violet', 'white']
-        self.pc_code = []
-        self.player_code = []
-        self.result = []
-        self.round = 1
-        self.pc_choose_colours()
-        self.main()
-
-    # main loop
-    def main(self):
-        while True:
-            print(self.round)
-            self.player_turn()
-            if self.player_code == self.pc_code:
-                print(f'You win in {self.round} rounds!')
-                break
-            else:
-                self.compare_result()
-
-    # pc chooses colours and set up code
-    def pc_choose_colours(self):
-        while len(self.pc_code) < 5:
-            colour = random.choice(self.colours)
-            self.pc_code.append(colour)
-        return self.pc_code
-
-    # player input 5 colours and try to break it
-    def player_turn(self):
-        print(f'WARNING: {self.pc_code}')
-        print(f'Choose from: {self.colours}')
-        colour1 = input('1@: ')
-        self.player_code.append(colour1)
-        colour2 = input('2@: ')
-        self.player_code.append(colour2)
-        colour3 = input('3@: ')
-        self.player_code.append(colour3)
-        colour4 = input('4@: ')
-        self.player_code.append(colour4)
-        colour5 = input('5@: ')
-        self.player_code.append(colour5)
-
-    # compare self.player_code with self.pc_code
-    def compare_result(self):
-        for index in range(len(self.player_code)):
-            if self.player_code[index] == self.pc_code[index]:
-                self.result.append('black')
-            elif (self.player_code[index] != self.pc_code[index]) and (self.player_code[index] in self.pc_code):
-                self.result.append('white')
-            else:
-                self.result.append(None)
-        print(self.result)
-        self.player_code.clear()
-        self.result.clear()
-        self.round += 1
-
-
-class MainWindow(tk.Frame):
-    def __init__(self, master):
-        super().__init__(master)
+        super().__init__()
+        logging.debug('Start main window')
         self.profile_list = []
         self.for_delete = []
         self.player = ''
-        self.master = master
-        self.master.title('Mastermind')
-        self.master.geometry('250x250')
-        self.pack(expand=1, fill='both')
-        self.terminate(self, self.master, 'Close game')
+        self.super_frame = tk.Frame(self)
+        self.title('Mastermind')
+        self.geometry('250x250')
+        self.super_frame.pack(expand=1, fill='both')
+        self.terminate(self.super_frame, self, 'Close game')
         self.main_window()
         self.create_menu()
 
@@ -93,7 +37,7 @@ class MainWindow(tk.Frame):
             search = name.search(file_str)
             self.profile_list.append(search.group('name'))
 
-    # close main window
+    # close any window
     def terminate(self, where, what, text):
         close_program = tk.Button(where, fg='red', command=what.destroy, text=text)
         close_program['padx'] = 5
@@ -102,7 +46,8 @@ class MainWindow(tk.Frame):
 
     # create menu
     def create_menu(self):
-        menu = tk.Menu(self.master)
+        logging.debug('print cascade menu')
+        menu = tk.Menu(self.super_frame)
 
         new_item = tk.Menu(menu, tearoff=0)
         new_item.add_command(label='New profile', command=self.create_new_profile)
@@ -111,24 +56,26 @@ class MainWindow(tk.Frame):
         new_item.add_separator()
         new_item.add_command(label='About')
         new_item.add_separator()
-        new_item.add_command(label='Close', command=self.master.destroy)
+        new_item.add_command(label='Close', command=self.super_frame.destroy)
 
         menu.add_cascade(label='Options', menu=new_item)
-        self.master.config(menu=menu)
+        self.config(menu=menu)
 
     # create main frame
     def main_window(self):
-        new_profile = tk.Button(self, text='New profile', command=self.create_new_profile)
+        logging.debug('call main window')
+        new_profile = tk.Button(self.super_frame, text='New profile', command=self.create_new_profile)
         new_profile.pack()
-        load_profile = tk.Button(self, text='Load profile', command=self.load_profile)
+        load_profile = tk.Button(self.super_frame, text='Load profile', command=self.load_profile)
         load_profile.pack()
-        delete_profile = tk.Button(self, text='Delete profile', command=self.delete_profile)
+        delete_profile = tk.Button(self.super_frame, text='Delete profile', command=self.delete_profile)
         delete_profile.pack()
-        play_game = tk.Button(self, text='New game', command=self.select_difficult)
+        play_game = tk.Button(self.super_frame, text='New game', command=self.select_difficult)
         play_game.pack()
 
     # create a new profile
     def create_new_profile(self):
+        logging.debug('create new profile')
         self.new_profile_window = tk.Toplevel(self)
         self.new_profile_window.title('New profile')
         self.terminate(self.new_profile_window, self.new_profile_window, 'Close window')
@@ -168,7 +115,7 @@ class MainWindow(tk.Frame):
     def load_profile(self):
         self.create_profile_list()
         if len(self.profile_list) != 0:
-            self.load_profile_window = tk.Toplevel(self)
+            self.load_profile_window = tk.Toplevel()
             self.load_profile_window.title('Select a profile')
             self.terminate(self.load_profile_window, self.load_profile_window, 'Close window')
             for index in range(len(self.profile_list)):
@@ -202,7 +149,7 @@ class MainWindow(tk.Frame):
     def delete_profile(self):
         self.create_profile_list()
         if len(self.profile_list) > 0:
-            self.delete_profile_window = tk.Toplevel(self)
+            self.delete_profile_window = tk.Toplevel()
             self.delete_profile_window.title('Delete profile')
             self.terminate(self.delete_profile_window, self.delete_profile_window, 'Close window')
             for index in range(len(self.profile_list)):
@@ -220,7 +167,7 @@ class MainWindow(tk.Frame):
     # select difficult panel
     def select_difficult(self):
         if self.player != '':
-            self.select_difficult_window = tk.Toplevel(self)
+            self.select_difficult_window = tk.Toplevel()
             self.select_difficult_window.title('Choose your level')
             # divided in 2 frames; left for normal modes, right for custom
             left_frame = tk.Frame(self.select_difficult_window)
@@ -346,18 +293,18 @@ class MainWindow(tk.Frame):
     # create game window
     def game_window(self):
         self.select_difficult_window.destroy()
-        game_window = tk.Tk()
-        game_window.title('Megamind')
-        GameWindow(game_window, self.player)
-        self.master.withdraw()
-        #self.master.destroy()
+        GameWindow(self, self.player)
+        self.withdraw()
 
 
-class GameWindow(tk.Frame):
+class GameWindow(tk.Toplevel):
     def __init__(self, master, player):
-        super().__init__(master)
+        super().__init__()
+        logging.debug(f'Start GameWindow with profile: {player}')
         self.master = master
-        self.pack(expand=1, fill='both')
+        self.title('Megamind')
+        self.big_frame = tk.Frame(self)
+        self.big_frame.pack(expand=1, fill='both')
         with pathlib.Path(f'profiles\\{player}.txt').open('r') as read:
             self.profile = json.load(read)
 
@@ -485,22 +432,21 @@ class GameWindow(tk.Frame):
         self.game['player'][self.round].setdefault('choice', choice)
         self.game['player'][self.round].setdefault('result', results_dict)
 
-        # win or lose condition
         # add one more round to counter
         self.round += 1
+        self.round_text_call_frame.destroy()
+        self.round_text_call()
+        self.center_frame.destroy()
+        self.print_save_board()
+        logging.warning(f'Result = {results}')
+        logging.critical(self.game)
+
+        # win or lose condition
         if all(c == 'black' for c in results):
             messagebox.showinfo('Congratulations!', 'You win.')
 
         elif self.round > self.rounds:
             messagebox.showinfo('Sorry!', f"You lose. I was thinking in:\n{self.secret}")
-
-        else:
-            self.round_text_call_frame.destroy()
-            self.round_text_call()
-            self.center_frame.destroy()
-            self.print_save_board()
-            logging.warning(f'Result = {results}')
-            logging.critical(self.game)
 
     # print board and past choices, from bottom to top
     # uneven rows are player choices
@@ -532,9 +478,8 @@ class GameWindow(tk.Frame):
                     player_result.grid(column=peg, row=row, padx=1, pady=1, ipadx=38)
 
     def close(self):
-        self.master.destroy()
-        recall_window = tk.Tk()
-        MainWindow(recall_window)
+        self.master.deiconify()
+        self.destroy()
 
 
 if __name__ == '__main__':
@@ -542,6 +487,5 @@ if __name__ == '__main__':
                         format='%(asctime)s - %(levelname)s - %(message)s')
     pathlib.Path('..\\tests\\log.txt').open('w')
     board_colour = '#42413e'  # color code for board
-    window = tk.Tk()
-    app = MainWindow(window)
-    app.mainloop()
+    MainWindow().mainloop()
+    logging.debug('close program')
