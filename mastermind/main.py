@@ -12,63 +12,6 @@ import logging
 # white = right colour, bad position
 # black = right colour, right position
 
-class Game:
-    def __init__(self):
-        self.colours = ['red', 'blue', 'green', 'yellow', 'orange', 'indigo', 'violet', 'white']
-        self.pc_code = []
-        self.player_code = []
-        self.result = []
-        self.round = 1
-        self.pc_choose_colours()
-        self.main()
-
-    # main loop
-    def main(self):
-        while True:
-            print(self.round)
-            self.player_turn()
-            if self.player_code == self.pc_code:
-                print(f'You win in {self.round} rounds!')
-                break
-            else:
-                self.compare_result()
-
-    # pc chooses colours and set up code
-    def pc_choose_colours(self):
-        while len(self.pc_code) < 5:
-            colour = random.choice(self.colours)
-            self.pc_code.append(colour)
-        return self.pc_code
-
-    # player input 5 colours and try to break it
-    def player_turn(self):
-        print(f'WARNING: {self.pc_code}')
-        print(f'Choose from: {self.colours}')
-        colour1 = input('1@: ')
-        self.player_code.append(colour1)
-        colour2 = input('2@: ')
-        self.player_code.append(colour2)
-        colour3 = input('3@: ')
-        self.player_code.append(colour3)
-        colour4 = input('4@: ')
-        self.player_code.append(colour4)
-        colour5 = input('5@: ')
-        self.player_code.append(colour5)
-
-    # compare self.player_code with self.pc_code
-    def compare_result(self):
-        for index in range(len(self.player_code)):
-            if self.player_code[index] == self.pc_code[index]:
-                self.result.append('black')
-            elif (self.player_code[index] != self.pc_code[index]) and (self.player_code[index] in self.pc_code):
-                self.result.append('white')
-            else:
-                self.result.append(None)
-        print(self.result)
-        self.player_code.clear()
-        self.result.clear()
-        self.round += 1
-
 
 class MainWindow(tk.Tk):
     def __init__(self):
@@ -357,6 +300,7 @@ class MainWindow(tk.Tk):
 class GameWindow(tk.Toplevel):
     def __init__(self, master, player):
         super().__init__()
+        logging.debug(f'Start GameWindow with profile: {player}')
         self.master = master
         self.title('Megamind')
         self.big_frame = tk.Frame(self)
@@ -488,22 +432,21 @@ class GameWindow(tk.Toplevel):
         self.game['player'][self.round].setdefault('choice', choice)
         self.game['player'][self.round].setdefault('result', results_dict)
 
-        # win or lose condition
         # add one more round to counter
         self.round += 1
+        self.round_text_call_frame.destroy()
+        self.round_text_call()
+        self.center_frame.destroy()
+        self.print_save_board()
+        logging.warning(f'Result = {results}')
+        logging.critical(self.game)
+
+        # win or lose condition
         if all(c == 'black' for c in results):
             messagebox.showinfo('Congratulations!', 'You win.')
 
         elif self.round > self.rounds:
             messagebox.showinfo('Sorry!', f"You lose. I was thinking in:\n{self.secret}")
-
-        else:
-            self.round_text_call_frame.destroy()
-            self.round_text_call()
-            self.center_frame.destroy()
-            self.print_save_board()
-            logging.warning(f'Result = {results}')
-            logging.critical(self.game)
 
     # print board and past choices, from bottom to top
     # uneven rows are player choices
@@ -545,4 +488,4 @@ if __name__ == '__main__':
     pathlib.Path('..\\tests\\log.txt').open('w')
     board_colour = '#42413e'  # color code for board
     MainWindow().mainloop()
-    print('close program')
+    logging.debug('close program')
