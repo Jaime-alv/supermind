@@ -483,14 +483,22 @@ class GameWindow(tk.Frame):
         self.game['player'][self.round].setdefault('choice', choice)
         self.game['player'][self.round].setdefault('result', results_dict)
 
-        # add one round to the counter
+        # win or lose condition
+        # add one more round to counter
         self.round += 1
-        self.round_text_call_frame.destroy()
-        self.round_text_call()
-        self.center_frame.destroy()
-        self.print_save_board()
-        logging.warning(f'Result = {results}')
-        logging.critical(self.game)
+        if all(c == 'black' for c in results):
+            messagebox.showinfo('Congratulations!', 'You win.')
+
+        elif self.round > self.rounds:
+            messagebox.showinfo('Sorry!', f"You lose. I was thinking in:\n{self.secret}")
+
+        else:
+            self.round_text_call_frame.destroy()
+            self.round_text_call()
+            self.center_frame.destroy()
+            self.print_save_board()
+            logging.warning(f'Result = {results}')
+            logging.critical(self.game)
 
     # print board and past choices, from bottom to top
     # uneven rows are player choices
