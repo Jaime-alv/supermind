@@ -345,10 +345,12 @@ class MainWindow(tk.Frame):
 
     # create game window
     def game_window(self):
+        self.select_difficult_window.destroy()
         game_window = tk.Tk()
         game_window.title('Megamind')
         GameWindow(game_window, self.player)
-        self.master.destroy()
+        self.master.withdraw()
+        #self.master.destroy()
 
 
 class GameWindow(tk.Frame):
@@ -419,7 +421,6 @@ class GameWindow(tk.Frame):
         for n in range(self.holes):
             combo = ttk.Combobox(player_frame, width=10, values=self.colours, state="readonly")
             combo.grid(column=n, row=0, padx=1)
-            #combo.current(0)
             combo.bind("<<ComboboxSelected>>", lambda event, i=n: self.choice_sel(event, i))
 
         # board's right side (buttons, round, game)
@@ -434,7 +435,7 @@ class GameWindow(tk.Frame):
         self.round_text_call()
 
         # submit button
-        submit = tk.Button(self.right_frame, text="Submit", command=self.compare_player)
+        submit = tk.Button(self.right_frame, text="Submit", command=self.everything_ok)
         submit.pack(anchor='s', side='bottom')
 
     def round_text_call(self):
@@ -447,17 +448,32 @@ class GameWindow(tk.Frame):
     def choice_sel(self, event, i):
         self.colour_dict[i] = event.widget.get()
 
+    # form validation from submit button
+    def everything_ok(self):
+        if all(self.colour_dict.get(c) != '' for c in self.colour_dict):
+            self.compare_player()
+
     # compare player against secret code
     def compare_player(self):
         logging.info(f'Player choice in round {self.round} = {self.colour_dict}')
         results = []  # Result from comparing player against secret code: black, white or None
-        choice = dict(self.colour_dict)  # Player choice in list form for saving game estate
+        choice = dict(self.colour_dict)  # Player choice in dict form for saving game estate
+        # now I need a list for counting items, if player puts 2 of the same colour and secret has only one, only one
+        # peg in result should be displayed
+        secret = list(self.secret)  # Need a new list I can modify for already used colours.
         results_dict = {}
         for c in self.colour_dict:
-            if self.colour_dict.get(c) == self.secret[c]:
+            if self.colour_dict.get(c) == secret[c]:
                 results_dict.setdefault(c, 'black')
                 results.append('black')
-            elif self.colour_dict.get(c) != self.secret[c] and (self.colour_dict.get(c) in self.secret):
+                secret[c] = 'used'
+            elif self.colour_dict.get(c) != secret[c] and (self.colour_dict.get(c) in secret):
+                value = 0
+                for y in range(len(secret)):
+                    if self.colour_dict.get(c) == secret[y]:
+                        value = y
+                        break
+                secret[value] = 'used'
                 results_dict.setdefault(c, 'white')
                 results.append('white')
             else:
@@ -469,15 +485,26 @@ class GameWindow(tk.Frame):
         self.game['player'][self.round].setdefault('choice', choice)
         self.game['player'][self.round].setdefault('result', results_dict)
 
-        # add one round to the counter
+        # win or lose condition
+        # add one more round to counter
         self.round += 1
-        self.round_text_call_frame.destroy()
-        self.round_text_call()
-        self.center_frame.destroy()
-        self.print_save_board()
-        logging.warning(f'Result = {results}')
-        logging.critical(self.game)
+        if all(c == 'black' for c in results):
+            messagebox.showinfo('Congratulations!', 'You win.')
 
+        elif self.round > self.rounds:
+            messagebox.showinfo('Sorry!', f"You lose. I was thinking in:\n{self.secret}")
+
+        else:
+            self.round_text_call_frame.destroy()
+            self.round_text_call()
+            self.center_frame.destroy()
+            self.print_save_board()
+            logging.warning(f'Result = {results}')
+            logging.critical(self.game)
+
+    # print board and past choices, from bottom to top
+    # uneven rows are player choices
+    # even rows are the result from comparing player choices against the secret code
     def print_save_board(self):
         self.center_frame = tk.Frame(self.left_frame, bg='black')
         self.center_frame.pack(side='top', anchor='n')
@@ -486,7 +513,7 @@ class GameWindow(tk.Frame):
             if game_round % 2 != 0:
                 for peg in range(self.holes):
                     try:
-                        text = self.game['player'][(game_round//2)+1]['choice'].get(peg, None)
+                        text = self.game['player'][(game_round // 2) + 1]['choice'].get(peg, None)
                     except KeyError:
                         text = None
                     if text is None:
@@ -496,14 +523,13 @@ class GameWindow(tk.Frame):
             elif game_round % 2 == 0:
                 for peg in range(self.holes):
                     try:
-                        text = self.game['player'][(game_round//2)]['result'].get(peg, None)
+                        text = self.game['player'][(game_round // 2)]['result'].get(peg, None)
                     except KeyError:
                         text = None
                     if text is None:
                         text = board_colour
                     player_result = tk.Label(self.center_frame, bg=text)
                     player_result.grid(column=peg, row=row, padx=1, pady=1, ipadx=38)
-
 
     def close(self):
         self.master.destroy()
