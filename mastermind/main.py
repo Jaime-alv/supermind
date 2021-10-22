@@ -345,10 +345,12 @@ class MainWindow(tk.Frame):
 
     # create game window
     def game_window(self):
+        self.select_difficult_window.destroy()
         game_window = tk.Tk()
         game_window.title('Megamind')
         GameWindow(game_window, self.player)
-        self.master.destroy()
+        self.master.withdraw()
+        #self.master.destroy()
 
 
 class GameWindow(tk.Frame):
