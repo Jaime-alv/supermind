@@ -337,6 +337,7 @@ class GameWindow(tk.Toplevel):
             self.colour_dict.setdefault(n, '')
         logging.debug(self.colour_dict)
 
+    # main game loop
     def main(self):
         if self.game_number < int(self.games):
             self.select_colours()
@@ -466,6 +467,8 @@ class GameWindow(tk.Toplevel):
             messagebox.showinfo('Sorry!', f"You lose. I was thinking in:\n{self.secret}")
             self.game_number += 1
             self.main()
+
+    # todo: after game, clean and reset fields, call main again
 
     # print board and past choices, from bottom to top
     # uneven rows are player choices
