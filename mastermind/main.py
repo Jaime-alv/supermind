@@ -320,29 +320,42 @@ class GameWindow(tk.Toplevel):
         self.secret = []  # secret color code player needs to get
         self.round = 1  # Current round
         self.game_number = 1  # Current game
-        self.select_colours()
-        self.board_frame_window()
+        self.set_up()
+        self.main()
+
         close = tk.Button(self, text='Close', command=self.close)
         close.pack(side='bottom')
 
-    # read number of colours game is going to use, and append to a list
-    # randomize colours and get secret code
-    def select_colours(self):
-        self.game.clear()
+    # set up and configure games
+    def set_up(self):
         colour_list = ['red', 'blue', 'green', 'yellow', 'orange', 'indigo', 'violet', 'white']
         for n in range(self.profile['config'].get('colours')):
             self.colours.append(colour_list[n])
         logging.debug(self.colours)
+        # create dict with n colours for storing player choice
+        for n in range(self.holes):
+            self.colour_dict.setdefault(n, '')
+        logging.debug(self.colour_dict)
+
+    def main(self):
+        if self.game_number < int(self.games):
+            self.select_colours()
+            self.board_frame_window()
+        else:
+            messagebox.showinfo('Goodbye', 'Thank you!')
+            self.close()
+
+    # read number of colours game is going to use, and append to a list
+    # randomize colours and get secret code
+    def select_colours(self):
+        self.game.clear()  # clean game state
+        self.secret.clear()  # clear secret in a new game round
         while len(self.secret) < self.holes:
             colour = random.choice(self.colours)
             self.secret.append(colour)
         self.game.setdefault('pc', self.secret)  # save game estate
         self.game.setdefault('player', {})
         logging.critical(f'SECRET CODE = {self.secret}')
-        # create dict with n colours for storing player choice
-        for n in range(self.holes):
-            self.colour_dict.setdefault(n, '')
-        logging.debug(self.colour_dict)
 
     def board_frame_window(self):
         # board's left side (secret code, answer and game state)
@@ -399,6 +412,8 @@ class GameWindow(tk.Toplevel):
     def everything_ok(self):
         if all(self.colour_dict.get(c) != '' for c in self.colour_dict):
             self.compare_player()
+        else:
+            messagebox.showerror('Error!', 'There is an empty field.')
 
     # compare player against secret code
     def compare_player(self):
@@ -444,9 +459,13 @@ class GameWindow(tk.Toplevel):
         # win or lose condition
         if all(c == 'black' for c in results):
             messagebox.showinfo('Congratulations!', 'You win.')
+            self.game_number += 1
+            self.main()
 
         elif self.round > self.rounds:
             messagebox.showinfo('Sorry!', f"You lose. I was thinking in:\n{self.secret}")
+            self.game_number += 1
+            self.main()
 
     # print board and past choices, from bottom to top
     # uneven rows are player choices
