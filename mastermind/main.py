@@ -349,8 +349,6 @@ class GameWindow(tk.Toplevel):
     # read number of colours game is going to use, and append to a list
     # randomize colours and get secret code
     def select_colours(self):
-        self.game.clear()  # clean game state
-        self.secret.clear()  # clear secret in a new game round
         while len(self.secret) < self.holes:
             colour = random.choice(self.colours)
             self.secret.append(colour)
@@ -460,15 +458,19 @@ class GameWindow(tk.Toplevel):
         # win or lose condition
         if all(c == 'black' for c in results):
             messagebox.showinfo('Congratulations!', 'You win.')
-            self.game_number += 1
-            self.main()
+            self.after_game()
 
         elif self.round > self.rounds:
             messagebox.showinfo('Sorry!', f"You lose. I was thinking in:\n{self.secret}")
-            self.game_number += 1
-            self.main()
+            self.after_game()
 
     # todo: after game, clean and reset fields, call main again
+    def after_game(self):
+        self.game_number += 1
+        self.round = 1
+        self.game.clear()  # clean game state
+        self.secret.clear()  # clear secret in a new game round
+        self.main()
 
     # print board and past choices, from bottom to top
     # uneven rows are player choices
