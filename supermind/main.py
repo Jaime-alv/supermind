@@ -21,7 +21,7 @@ class MainWindow(tk.Tk):
         self.for_delete = []
         self.player = ''
         self.super_frame = tk.Frame(self)
-        self.title('Mastermind')
+        self.title('Supermind')
         self.geometry('250x250')
         self.super_frame.pack(expand=1, fill='both')
         self.terminate(self.super_frame, self, 'Close game')
@@ -302,7 +302,7 @@ class GameWindow(tk.Toplevel):
         super().__init__()
         logging.debug(f'Start GameWindow with profile: {player}')
         self.master = master
-        self.title('Megamind')
+        self.title('Supermind')
         self.big_frame = tk.Frame(self)
         self.big_frame.pack(expand=1, fill='both')
         with pathlib.Path(f'profiles\\{player}.txt').open('r') as read:
@@ -336,12 +336,13 @@ class GameWindow(tk.Toplevel):
         for n in range(self.holes):
             self.colour_dict.setdefault(n, '')
         logging.debug(self.colour_dict)
+        self.right_frame_window()
 
     # main game loop
     def main(self):
-        if self.game_number < int(self.games):
+        if self.game_number < (self.games + 1):
             self.select_colours()
-            self.board_frame_window()
+            self.left_frame_window()
         else:
             messagebox.showinfo('Goodbye', 'Thank you!')
             self.close()
@@ -356,7 +357,7 @@ class GameWindow(tk.Toplevel):
         self.game.setdefault('player', {})
         logging.critical(f'SECRET CODE = {self.secret}')
 
-    def board_frame_window(self):
+    def left_frame_window(self):
         # board's left side (secret code, answer and game state)
         self.left_frame = tk.Frame(self)
         self.left_frame.pack(side='left')
@@ -382,25 +383,33 @@ class GameWindow(tk.Toplevel):
             combo.grid(column=n, row=0, padx=1)
             combo.bind("<<ComboboxSelected>>", lambda event, i=n: self.choice_sel(event, i))
 
+    def right_frame_window(self):
         # board's right side (buttons, round, game)
         self.right_frame = tk.Frame(self)
         self.right_frame.pack(side='right')
 
         # game counter
-        game_label = tk.Label(self.right_frame, text=f'Game #:{self.game_number}')
-        game_label.pack()
+        self.game_counter_call()
 
         # round counter
-        self.round_text_call()
+        self.round_counter_call()
 
         # submit button
         submit = tk.Button(self.right_frame, text="Submit", command=self.everything_ok)
         submit.pack(anchor='s', side='bottom')
 
-    def round_text_call(self):
-        self.round_text_call_frame = tk.Frame(self.right_frame)
-        self.round_text_call_frame.pack()
-        round_label = tk.Label(self.round_text_call_frame, text=f'Round #:{self.round}')
+    # show game counter in right frame
+    def game_counter_call(self):
+        self.game_counter = tk.Frame(self.right_frame)
+        self.game_counter.pack()
+        game_label = tk.Label(self.game_counter, text=f'Game #:{self.game_number}')
+        game_label.pack()
+
+    # show round counter in right frame
+    def round_counter_call(self):
+        self.round_counter = tk.Frame(self.right_frame)
+        self.round_counter.pack()
+        round_label = tk.Label(self.round_counter, text=f'Round #:{self.round}')
         round_label.pack()
 
     # save player's choice in a dictionary so it can be checked later
@@ -448,8 +457,8 @@ class GameWindow(tk.Toplevel):
 
         # add one more round to counter
         self.round += 1
-        self.round_text_call_frame.destroy()
-        self.round_text_call()
+        self.round_counter.destroy()
+        self.round_counter_call()
         self.center_frame.destroy()
         self.print_save_board()
         logging.warning(f'Result = {results}')
@@ -464,12 +473,17 @@ class GameWindow(tk.Toplevel):
             messagebox.showinfo('Sorry!', f"You lose. I was thinking in:\n{self.secret}")
             self.after_game()
 
-    # todo: after game, clean and reset fields, call main again
+    # after game, clean and reset fields, call main again
     def after_game(self):
         self.game_number += 1
         self.round = 1
         self.game.clear()  # clean game state
         self.secret.clear()  # clear secret in a new game round
+        self.left_frame.destroy()
+        self.game_counter.destroy()  # update game counter
+        self.game_counter_call()
+        self.round_counter.destroy()  # reset round counter to 1
+        self.round_counter_call()
         self.main()
 
     # print board and past choices, from bottom to top
