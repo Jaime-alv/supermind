@@ -434,7 +434,7 @@ class GameWindow(tk.Toplevel):
 
     # form validation from submit button
     def everything_ok(self):
-        if all(self.colour_dict.get(c) != '' for c in self.colour_dict):
+        if all(self.colour_dict.get(str(c)) != '' for c in self.colour_dict):
             self.compare_player()
         else:
             messagebox.showerror('Error!', 'There is an empty field.')
@@ -443,33 +443,35 @@ class GameWindow(tk.Toplevel):
     def compare_player(self):
         logging.info(f'Player choice in round {self.round} = {self.colour_dict}')
         results = []  # Result from comparing player against secret code: black, white or None
-        choice = dict(self.colour_dict)  # Player choice in dict form for saving game estate
+        choice = {}  # Player choice in dict form for saving game estate
+        for key in self.colour_dict:
+            choice.setdefault(str(key), self.colour_dict.get(key))
         # now I need a list for counting items, if player puts 2 of the same colour and secret has only one, only one
         # peg in result should be displayed
         secret = list(self.secret)  # Need a new list I can modify for already used colours.
         results_dict = {}
         for c in self.colour_dict:
-            if self.colour_dict.get(c) == secret[c]:
-                results_dict.setdefault(c, 'black')
+            if self.colour_dict.get(c) == secret[int(c)]:
+                results_dict.setdefault(str(c), 'black')
                 results.append('black')
-                secret[c] = 'used'
-            elif self.colour_dict.get(c) != secret[c] and (self.colour_dict.get(c) in secret):
+                secret[int(c)] = 'used'
+            elif self.colour_dict.get(c) != secret[int(c)] and (self.colour_dict.get(c) in secret):
                 value = 0
                 for y in range(len(secret)):
                     if self.colour_dict.get(c) == secret[y]:
                         value = y
                         break
                 secret[value] = 'used'
-                results_dict.setdefault(c, 'white')
+                results_dict.setdefault(str(c), 'white')
                 results.append('white')
             else:
-                results_dict.setdefault(c, None)
+                results_dict.setdefault(str(c), None)
                 results.append(None)
 
         # save game state
-        self.game['player'].setdefault(self.round, {})
-        self.game['player'][self.round].setdefault('choice', choice)
-        self.game['player'][self.round].setdefault('result', results_dict)
+        self.game['player'].setdefault(str(self.round), {})
+        self.game['player'][str(self.round)].setdefault('choice', choice)
+        self.game['player'][str(self.round)].setdefault('result', results_dict)
 
         # add one more round to counter
         self.round += 1
@@ -510,25 +512,26 @@ class GameWindow(tk.Toplevel):
         self.center_frame.pack(side='top', anchor='n')
         for game_round in range(1, (self.rounds * 2) + 1):
             row = ((self.rounds * 2) + 1) - game_round
-            if game_round % 2 != 0:
+            if game_round % 2 != 0:  # player choice
                 for peg in range(self.holes):
                     try:
-                        text = self.game['player'][(game_round // 2) + 1]['choice'].get(peg, None)
+                        tag_colour = self.game['player'][str((game_round // 2) + 1)]['choice'].get(str(peg), None)
+                        # json file stores int as str
                     except KeyError:
-                        text = None
-                    if text is None:
-                        text = board_colour
-                    player_result = tk.Label(self.center_frame, bg=text)
+                        tag_colour = None
+                    if tag_colour is None:
+                        tag_colour = board_colour
+                    player_result = tk.Label(self.center_frame, bg=tag_colour)
                     player_result.grid(column=peg, row=row, padx=1, pady=1, ipadx=38)
-            elif game_round % 2 == 0:
+            elif game_round % 2 == 0:  # result
                 for peg in range(self.holes):
                     try:
-                        text = self.game['player'][(game_round // 2)]['result'].get(peg, None)
+                        tag_colour = self.game['player'][str((game_round // 2))]['result'].get(str(peg), None)
                     except KeyError:
-                        text = None
-                    if text is None:
-                        text = board_colour
-                    player_result = tk.Label(self.center_frame, bg=text)
+                        tag_colour = None
+                    if tag_colour is None:
+                        tag_colour = board_colour
+                    player_result = tk.Label(self.center_frame, bg=tag_colour)
                     player_result.grid(column=peg, row=row, padx=1, pady=1, ipadx=38)
 
     # close window and call MainWindow again
