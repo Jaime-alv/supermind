@@ -323,8 +323,6 @@ class GameWindow(tk.Toplevel):
         self.set_up()
         self.main()
 
-        close = tk.Button(self, text='Close', command=self.close)
-        close.pack(side='bottom')
 
     # set up and configure games
     def set_up(self):
@@ -397,6 +395,10 @@ class GameWindow(tk.Toplevel):
         # submit button
         submit = tk.Button(self.right_frame, text="Submit", command=self.everything_ok)
         submit.pack(anchor='s', side='bottom')
+
+        # close window & save game
+        close = tk.Button(self.right_frame, text='Close', command=self.close)
+        close.pack(side='bottom')
 
     # show game counter in right frame
     def game_counter_call(self):
@@ -515,6 +517,7 @@ class GameWindow(tk.Toplevel):
                     player_result = tk.Label(self.center_frame, bg=text)
                     player_result.grid(column=peg, row=row, padx=1, pady=1, ipadx=38)
 
+    # close window and call MainWindow again
     def close(self):
         self.master.deiconify()
         self.destroy()
