@@ -97,7 +97,9 @@ class MainWindow(tk.Tk):
                     'holes': 0,
                     'rounds': 0,
                     'games': 0},
-                'continue': {'bool': False, 'game': {}},
+                'continue': {'bool': False,
+                             'game_number': 0,
+                             'game': {}},
                 'easy': {},
                 'normal': {},
                 'hard': {},
@@ -292,7 +294,10 @@ class MainWindow(tk.Tk):
 
     # create game window
     def game_window(self):
-        self.select_difficult_window.destroy()
+        try:
+            self.select_difficult_window.destroy()
+        except AttributeError:
+            pass
         GameWindow(self, self.player)
         self.withdraw()
 
@@ -301,11 +306,12 @@ class GameWindow(tk.Toplevel):
     def __init__(self, master, player):
         super().__init__()
         logging.debug(f'Start GameWindow with profile: {player}')
+        self.player = player
         self.master = master
         self.title('Supermind')
         self.big_frame = tk.Frame(self)
         self.big_frame.pack(expand=1, fill='both')
-        with pathlib.Path(f'profiles\\{player}.txt').open('r') as read:
+        with pathlib.Path(f'profiles\\{self.player}.txt').open('r') as read:
             self.profile = json.load(read)
 
         # unpack all fields
@@ -314,15 +320,23 @@ class GameWindow(tk.Toplevel):
         self.games = self.profile['config'].get('games')
         self.dif = self.profile['config'].get('difficulty')
 
-        self.game = {}  # dict for saving game state and all player choices
         self.colour_dict = {}  # place for storing player choice until hit 'submit'
         self.colours = []  # available colours for the current game
-        self.secret = []  # secret color code player needs to get
-        self.round = 1  # Current round
-        self.game_number = 1  # Current game
+
+        # check for saved game
+        if not self.profile['continue'].get('bool'):
+            self.game = {}  # dict for saving game state and all player choices
+            self.secret = []  # secret color code player needs to get
+            self.round = 1  # Current round
+            self.game_number = 1  # Current game
+        else:
+            self.game = self.profile['continue']['game']
+            self.secret = self.profile['continue']['game']['pc']
+            self.game_number = self.profile['continue']['game_number']
+            self.round = len(self.profile['continue']['game']['player'])
+
         self.set_up()
         self.main()
-
 
     # set up and configure games
     def set_up(self):
@@ -519,8 +533,17 @@ class GameWindow(tk.Toplevel):
 
     # close window and call MainWindow again
     def close(self):
+        self.save_all()
         self.master.deiconify()
         self.destroy()
+
+    # save game estate to profile file
+    def save_all(self):
+        self.profile['continue']['bool'] = True
+        self.profile['continue']['game_number'] = self.game_number
+        self.profile['continue']['game'] = self.game
+        with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as overwrite:
+            json.dump(self.profile, overwrite)
 
 
 if __name__ == '__main__':
