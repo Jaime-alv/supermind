@@ -330,10 +330,10 @@ class GameWindow(tk.Toplevel):
             self.round = 1  # Current round
             self.game_number = 1  # Current game
         else:
-            self.game = self.profile['continue']['game']
+            self.game = self.profile['continue'].get('game')
             self.secret = self.profile['continue']['game']['pc']
-            self.game_number = self.profile['continue']['game_number']
-            self.round = len(self.profile['continue']['game']['player'])
+            self.game_number = self.profile['continue'].get('game_number')
+            self.round = len(self.profile['continue']['game']['player']) + 1
 
         self.set_up()
         self.main()
