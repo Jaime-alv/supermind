@@ -165,6 +165,7 @@ class MainWindow(tk.Tk):
             else:
                 self.select_difficult()
                 self.profile['continue']['bool'] = False
+                self.profile['continue']['game_number'] = 1
                 self.profile['continue']['game'].clear()
                 with pathlib.Path(f'profiles\\{name}.txt').open('w') as overwrite:
                     json.dump(self.profile, overwrite)
@@ -454,6 +455,12 @@ class GameWindow(tk.Toplevel):
             self.select_colours()
             self.left_frame_window()
         else:
+            # game is over, time to reset 'continue'
+            self.profile['continue']['bool'] = False
+            self.profile['continue']['game_number'] = 1
+            self.profile['continue']['game'].clear()
+            with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as overwrite:
+                json.dump(self.profile, overwrite)
             messagebox.showinfo('Goodbye', 'Thank you!')
             self.close()
 
