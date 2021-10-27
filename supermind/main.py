@@ -90,6 +90,9 @@ class MainWindow(tk.Tk):
 
     def create_json(self):
         user = self.user_name.get()
+        stat = {'wins': 0,
+                'loses': 0,
+                'fastest': 100}
         data = {'name': user,
                 'config': {
                     'difficulty': '',
@@ -100,10 +103,13 @@ class MainWindow(tk.Tk):
                 'continue': {'bool': False,
                              'game_number': 0,
                              'game': {}},
-                'easy': {},
-                'normal': {},
-                'hard': {},
-                'custom': {}}
+                'statistics': {'easy': {},
+                               'normal': {},
+                               'hard': {},
+                               'custom': {}}}
+        for dif in data['statistics']:
+            new_stats = dict(stat)
+            data['statistics'][dif] = new_stats
         if not pathlib.Path('profiles').exists():
             pathlib.Path('profiles').mkdir(exist_ok=True)
         if user != '':
