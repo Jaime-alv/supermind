@@ -136,6 +136,10 @@ class MainWindow(tk.Tk):
             with pathlib.Path(f'profiles\\{user}.txt').open('w') as file:
                 json.dump(data, file)
             self.new_profile_window.destroy()
+
+            # set player to new user and ask for a new game
+            self.player = user
+            self.select_difficult()
         else:
             messagebox.showerror('Error!', "Name can't be empty!")
 
