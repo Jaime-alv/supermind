@@ -1,4 +1,22 @@
+# supermind
+# Classic colour code-breaking game.
+#
 # Copyright (C) 2021 Jaime Alvarez Fernandez
+# Contact: https://github.com/Jaime-alv
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+# ==========================================================================
 import pathlib
 import random
 import tkinter as tk
@@ -339,7 +357,6 @@ class MainWindow(tk.Tk):
         easy_label.grid(column=0, row=0, sticky='w')
         if profile.get('wins') + profile.get('loses') > 0:
             total_games = profile.get('wins') + profile.get('loses')
-            print(total_games)
             total = tk.Label(where, text=f'    ·Total games: {total_games}')
             total.grid(column=0, row=1, sticky='w')
             win_games = profile.get('wins')
@@ -415,6 +432,21 @@ class GameWindow(tk.Toplevel):
             self.colour_dict.setdefault(n, '')
         logging.debug(self.colour_dict)
         self.right_frame_window()
+        self.column_round_counter()
+
+    # round counter at left most side
+    def column_round_counter(self):
+        column_round = tk.Frame(self)
+        column_round.pack(side='left')
+        for game_round in range(1, (self.rounds * 2) + 1):
+            row = ((self.rounds * 2) + 1) - game_round
+            if game_round % 2 != 0:
+                rd_number = int((game_round/2) + 1)
+                numb = tk.Label(column_round, text=f'{rd_number:02}')
+                numb.grid(column=0, row=row, pady=1)
+            else:
+                empty = tk.Label(column_round, text='')
+                empty.grid(column=0, row=row, pady=1)
 
     # main game loop
     def main(self):
@@ -446,7 +478,7 @@ class GameWindow(tk.Toplevel):
 
         # print pc code
         for n in range(self.holes):
-            label = tk.Label(secret_frame, text='', fg='black', bg=self.secret[n])
+            label = tk.Label(secret_frame, text='', fg='black', bg='#2c2c30')
             label.grid(column=n, row=0, padx=1, pady=1, ipadx=38)
 
         # rounds frame (center frame with all player solutions)
@@ -629,6 +661,6 @@ if __name__ == '__main__':
     logging.basicConfig(filename='..\\tests\\log.txt', level=logging.DEBUG,
                         format='%(asctime)s - %(levelname)s - %(message)s')
     pathlib.Path('..\\tests\\log.txt').open('w')
-    board_colour = '#42413e'  # color code for board
+    board_colour = '#6a6c75'  # color code for board
     MainWindow().mainloop()
     logging.debug('close program')
