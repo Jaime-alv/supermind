@@ -415,6 +415,21 @@ class GameWindow(tk.Toplevel):
             self.colour_dict.setdefault(n, '')
         logging.debug(self.colour_dict)
         self.right_frame_window()
+        self.column_round_counter()
+
+    # round counter at left most side
+    def column_round_counter(self):
+        column_round = tk.Frame(self)
+        column_round.pack(side='left')
+        for game_round in range(1, (self.rounds * 2) + 1):
+            row = ((self.rounds * 2) + 1) - game_round
+            if game_round % 2 != 0:
+                rd_number = int((game_round/2) + 1)
+                numb = tk.Label(column_round, text=f'{rd_number:02}')
+                numb.grid(column=0, row=row, pady=1)
+            else:
+                empty = tk.Label(column_round, text='')
+                empty.grid(column=0, row=row, pady=1)
 
     # main game loop
     def main(self):
