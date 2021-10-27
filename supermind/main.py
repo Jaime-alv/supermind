@@ -53,6 +53,7 @@ class MainWindow(tk.Tk):
         new_item.add_command(label='New profile', command=self.create_new_profile)
         new_item.add_command(label='Load profile', command=self.load_profile)
         new_item.add_command(label='Delete profile', command=self.delete_profile)
+        new_item.add_command(label='Profile statistics', command=self.show_profile)
         new_item.add_separator()
         new_item.add_command(label='About')
         new_item.add_separator()
@@ -90,6 +91,9 @@ class MainWindow(tk.Tk):
 
     def create_json(self):
         user = self.user_name.get()
+        stat = {'wins': 0,
+                'loses': 0,
+                'fastest': 100}
         data = {'name': user,
                 'config': {
                     'difficulty': '',
@@ -97,11 +101,17 @@ class MainWindow(tk.Tk):
                     'holes': 0,
                     'rounds': 0,
                     'games': 0},
-                'continue': {'bool': False, 'game': {}},
-                'easy': {},
-                'normal': {},
-                'hard': {},
-                'custom': {}}
+                'continue': {'bool': False,
+                             'game_number': 0,
+                             'game': {}},
+                'statistics': {'easy': {},
+                               'normal': {},
+                               'hard': {},
+                               'custom': {}}}
+        for dif in data['statistics']:
+            new_stats = dict(stat)
+            # noinspection PyTypeChecker
+            data['statistics'][dif] = new_stats
         if not pathlib.Path('profiles').exists():
             pathlib.Path('profiles').mkdir(exist_ok=True)
         if user != '':
@@ -290,9 +300,73 @@ class MainWindow(tk.Tk):
         else:
             messagebox.showerror('Error!', 'Please, enter valid inputs!')
 
+    # show profile statistics
+    def show_profile(self):
+        if self.player != '':
+            with pathlib.Path(f'profiles\\{self.player}.txt').open('r') as read:
+                profile = json.load(read)
+            # create new window
+            profile_window = tk.Toplevel()
+            profile_window.title(self.player)
+            self.terminate(profile_window, profile_window, 'Close')
+
+            # statistics for easy difficulty
+            easy_frame = tk.Frame(profile_window)
+            easy_frame.pack(anchor='w')
+            easy_label = tk.Label(easy_frame, text=r'» Easy:')
+            easy_label.grid(column=0, row=0, sticky='w')
+            self.profile_unpack(easy_frame, profile['statistics']['easy'])
+
+            # statistics for normal difficulty
+            normal_frame = tk.Frame(profile_window)
+            normal_frame.pack(anchor='w')
+            normal_label = tk.Label(normal_frame, text=r'» Normal:')
+            normal_label.grid(column=0, row=0, sticky='w')
+            self.profile_unpack(normal_frame, profile['statistics']['normal'])
+
+            # statistics for hard difficulty
+            hard_frame = tk.Frame(profile_window)
+            hard_frame.pack(anchor='w')
+            hard_label = tk.Label(hard_frame, text=r'» Hard:')
+            hard_label.grid(column=0, row=0, sticky='w')
+            self.profile_unpack(hard_frame, profile['statistics']['hard'])
+
+            # statistics for custom difficulty
+            custom_frame = tk.Frame(profile_window)
+            custom_frame.pack(anchor='w')
+            custom_label = tk.Label(custom_frame, text=r'» Custom:')
+            custom_label.grid(column=0, row=0, sticky='w')
+            self.profile_unpack(custom_frame, profile['statistics']['custom'])
+
+        else:
+            messagebox.showerror('Error!', 'Select a profile first!')
+
+    # print profile function
+    def profile_unpack(self, where, profile):
+        if profile.get('wins') + profile.get('loses') > 0:
+            total_games = profile.get('wins') + profile.get('loses')
+            print(total_games)
+            total = tk.Label(where, text=f' ·Total games: {total_games}')
+            total.grid(column=0, row=1, sticky='w')
+            win_games = profile.get('wins')
+            win = tk.Label(where, text=f'  ·Total wins: {win_games}')
+            win.grid(column=0, row=2, sticky='w')
+            loss_games = profile.get('loses')
+            loss = tk.Label(where, text=f'  ·Total loses: {loss_games}')
+            loss.grid(column=0, row=3, sticky='w')
+            win_loss_ratio = round(win_games * 100 / total_games, 2)
+            win_loss = tk.Label(where, text=f'  ·Win/Loss ratio: {win_loss_ratio}%')
+            win_loss.grid(column=0, row=4, sticky='w')
+        else:
+            nothing = tk.Label(where, text='    ·No data.')
+            nothing.grid(column=0, row=1, sticky='w')
+
     # create game window
     def game_window(self):
-        self.select_difficult_window.destroy()
+        try:
+            self.select_difficult_window.destroy()
+        except AttributeError:
+            pass
         GameWindow(self, self.player)
         self.withdraw()
 
@@ -301,11 +375,12 @@ class GameWindow(tk.Toplevel):
     def __init__(self, master, player):
         super().__init__()
         logging.debug(f'Start GameWindow with profile: {player}')
+        self.player = player
         self.master = master
         self.title('Supermind')
         self.big_frame = tk.Frame(self)
         self.big_frame.pack(expand=1, fill='both')
-        with pathlib.Path(f'profiles\\{player}.txt').open('r') as read:
+        with pathlib.Path(f'profiles\\{self.player}.txt').open('r') as read:
             self.profile = json.load(read)
 
         # unpack all fields
@@ -314,17 +389,23 @@ class GameWindow(tk.Toplevel):
         self.games = self.profile['config'].get('games')
         self.dif = self.profile['config'].get('difficulty')
 
-        self.game = {}  # dict for saving game state and all player choices
         self.colour_dict = {}  # place for storing player choice until hit 'submit'
         self.colours = []  # available colours for the current game
-        self.secret = []  # secret color code player needs to get
-        self.round = 1  # Current round
-        self.game_number = 1  # Current game
+
+        # check for saved game
+        if not self.profile['continue'].get('bool'):
+            self.game = {}  # dict for saving game state and all player choices
+            self.secret = []  # secret color code player needs to get
+            self.round = 1  # Current round
+            self.game_number = 1  # Current game
+        else:
+            self.game = self.profile['continue'].get('game')
+            self.secret = self.profile['continue']['game']['pc']
+            self.game_number = self.profile['continue'].get('game_number')
+            self.round = len(self.profile['continue']['game']['player']) + 1
+
         self.set_up()
         self.main()
-
-        close = tk.Button(self, text='Close', command=self.close)
-        close.pack(side='bottom')
 
     # set up and configure games
     def set_up(self):
@@ -398,6 +479,10 @@ class GameWindow(tk.Toplevel):
         submit = tk.Button(self.right_frame, text="Submit", command=self.everything_ok)
         submit.pack(anchor='s', side='bottom')
 
+        # close window & save game
+        close = tk.Button(self.right_frame, text='Close', command=self.close)
+        close.pack(side='bottom')
+
     # show game counter in right frame
     def game_counter_call(self):
         self.game_counter = tk.Frame(self.right_frame)
@@ -418,7 +503,7 @@ class GameWindow(tk.Toplevel):
 
     # form validation from submit button
     def everything_ok(self):
-        if all(self.colour_dict.get(c) != '' for c in self.colour_dict):
+        if all(self.colour_dict.get(str(c)) != '' for c in self.colour_dict):
             self.compare_player()
         else:
             messagebox.showerror('Error!', 'There is an empty field.')
@@ -427,33 +512,35 @@ class GameWindow(tk.Toplevel):
     def compare_player(self):
         logging.info(f'Player choice in round {self.round} = {self.colour_dict}')
         results = []  # Result from comparing player against secret code: black, white or None
-        choice = dict(self.colour_dict)  # Player choice in dict form for saving game estate
+        choice = {}  # Player choice in dict form for saving game estate
+        for key in self.colour_dict:
+            choice.setdefault(str(key), self.colour_dict.get(key))
         # now I need a list for counting items, if player puts 2 of the same colour and secret has only one, only one
         # peg in result should be displayed
         secret = list(self.secret)  # Need a new list I can modify for already used colours.
         results_dict = {}
         for c in self.colour_dict:
-            if self.colour_dict.get(c) == secret[c]:
-                results_dict.setdefault(c, 'black')
+            if self.colour_dict.get(c) == secret[int(c)]:
+                results_dict.setdefault(str(c), 'black')
                 results.append('black')
-                secret[c] = 'used'
-            elif self.colour_dict.get(c) != secret[c] and (self.colour_dict.get(c) in secret):
+                secret[int(c)] = 'used'
+            elif self.colour_dict.get(c) != secret[int(c)] and (self.colour_dict.get(c) in secret):
                 value = 0
                 for y in range(len(secret)):
                     if self.colour_dict.get(c) == secret[y]:
                         value = y
                         break
                 secret[value] = 'used'
-                results_dict.setdefault(c, 'white')
+                results_dict.setdefault(str(c), 'white')
                 results.append('white')
             else:
-                results_dict.setdefault(c, None)
+                results_dict.setdefault(str(c), None)
                 results.append(None)
 
         # save game state
-        self.game['player'].setdefault(self.round, {})
-        self.game['player'][self.round].setdefault('choice', choice)
-        self.game['player'][self.round].setdefault('result', results_dict)
+        self.game['player'].setdefault(str(self.round), {})
+        self.game['player'][str(self.round)].setdefault('choice', choice)
+        self.game['player'][str(self.round)].setdefault('result', results_dict)
 
         # add one more round to counter
         self.round += 1
@@ -467,10 +554,18 @@ class GameWindow(tk.Toplevel):
         # win or lose condition
         if all(c == 'black' for c in results):
             messagebox.showinfo('Congratulations!', 'You win.')
+            self.profile['statistics'][self.dif]['wins'] += 1
+            if self.profile['statistics'][self.dif].get('fastest') > (self.round - 1):
+                self.profile['statistics'][self.dif]['fastest'] = (self.round - 1)
+            with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as overwrite:
+                json.dump(self.profile, overwrite)
             self.after_game()
 
         elif self.round > self.rounds:
             messagebox.showinfo('Sorry!', f"You lose. I was thinking in:\n{self.secret}")
+            self.profile['statistics'][self.dif]['loses'] += 1
+            with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as overwrite:
+                json.dump(self.profile, overwrite)
             self.after_game()
 
     # after game, clean and reset fields, call main again
@@ -494,30 +589,41 @@ class GameWindow(tk.Toplevel):
         self.center_frame.pack(side='top', anchor='n')
         for game_round in range(1, (self.rounds * 2) + 1):
             row = ((self.rounds * 2) + 1) - game_round
-            if game_round % 2 != 0:
+            if game_round % 2 != 0:  # player choice
                 for peg in range(self.holes):
                     try:
-                        text = self.game['player'][(game_round // 2) + 1]['choice'].get(peg, None)
+                        tag_colour = self.game['player'][str((game_round // 2) + 1)]['choice'].get(str(peg), None)
+                        # json file stores int as str
                     except KeyError:
-                        text = None
-                    if text is None:
-                        text = board_colour
-                    player_result = tk.Label(self.center_frame, bg=text)
+                        tag_colour = None
+                    if tag_colour is None:
+                        tag_colour = board_colour
+                    player_result = tk.Label(self.center_frame, bg=tag_colour)
                     player_result.grid(column=peg, row=row, padx=1, pady=1, ipadx=38)
-            elif game_round % 2 == 0:
+            elif game_round % 2 == 0:  # result
                 for peg in range(self.holes):
                     try:
-                        text = self.game['player'][(game_round // 2)]['result'].get(peg, None)
+                        tag_colour = self.game['player'][str((game_round // 2))]['result'].get(str(peg), None)
                     except KeyError:
-                        text = None
-                    if text is None:
-                        text = board_colour
-                    player_result = tk.Label(self.center_frame, bg=text)
+                        tag_colour = None
+                    if tag_colour is None:
+                        tag_colour = board_colour
+                    player_result = tk.Label(self.center_frame, bg=tag_colour)
                     player_result.grid(column=peg, row=row, padx=1, pady=1, ipadx=38)
 
+    # close window and call MainWindow again
     def close(self):
+        self.save_all()
         self.master.deiconify()
         self.destroy()
+
+    # save game estate to profile file
+    def save_all(self):
+        self.profile['continue']['bool'] = True
+        self.profile['continue']['game_number'] = self.game_number
+        self.profile['continue']['game'] = self.game
+        with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as overwrite:
+            json.dump(self.profile, overwrite)
 
 
 if __name__ == '__main__':
