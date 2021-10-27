@@ -19,6 +19,8 @@ number of duplicate colours in the hidden code.
 Once feedback is provided, another guess is made; guesses and feedback continue to alternate until either the codebreaker 
 guesses correctly, or all rows of the decoding boards are full.
 
+![game](img/show.jpg)
+
 info and game rules from [wikipedia](https://en.wikipedia.org/wiki/Mastermind_(board_game))
 
 # Installation
