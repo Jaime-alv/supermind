@@ -313,36 +313,30 @@ class MainWindow(tk.Tk):
             # statistics for easy difficulty
             easy_frame = tk.Frame(profile_window)
             easy_frame.pack(anchor='w')
-            easy_label = tk.Label(easy_frame, text=r'» Easy:')
-            easy_label.grid(column=0, row=0, sticky='w')
-            self.profile_unpack(easy_frame, profile['statistics']['easy'])
+            self.profile_unpack(easy_frame, profile['statistics']['easy'], 'Easy')
 
             # statistics for normal difficulty
             normal_frame = tk.Frame(profile_window)
             normal_frame.pack(anchor='w')
-            normal_label = tk.Label(normal_frame, text=r'» Normal:')
-            normal_label.grid(column=0, row=0, sticky='w')
-            self.profile_unpack(normal_frame, profile['statistics']['normal'])
+            self.profile_unpack(normal_frame, profile['statistics']['normal'], 'Normal')
 
             # statistics for hard difficulty
             hard_frame = tk.Frame(profile_window)
             hard_frame.pack(anchor='w')
-            hard_label = tk.Label(hard_frame, text=r'» Hard:')
-            hard_label.grid(column=0, row=0, sticky='w')
-            self.profile_unpack(hard_frame, profile['statistics']['hard'])
+            self.profile_unpack(hard_frame, profile['statistics']['hard'], 'Hard')
 
             # statistics for custom difficulty
             custom_frame = tk.Frame(profile_window)
             custom_frame.pack(anchor='w')
-            custom_label = tk.Label(custom_frame, text=r'» Custom:')
-            custom_label.grid(column=0, row=0, sticky='w')
-            self.profile_unpack(custom_frame, profile['statistics']['custom'])
+            self.profile_unpack(custom_frame, profile['statistics']['custom'], 'Custom')
 
         else:
             messagebox.showerror('Error!', 'Select a profile first!')
 
     # print profile function
-    def profile_unpack(self, where, profile):
+    def profile_unpack(self, where, profile, dif):
+        easy_label = tk.Label(where, text=f'» {dif}:')
+        easy_label.grid(column=0, row=0, sticky='w')
         if profile.get('wins') + profile.get('loses') > 0:
             total_games = profile.get('wins') + profile.get('loses')
             print(total_games)
