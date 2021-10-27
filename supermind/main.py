@@ -446,7 +446,7 @@ class GameWindow(tk.Toplevel):
 
         # print pc code
         for n in range(self.holes):
-            label = tk.Label(secret_frame, text='', fg='black', bg=self.secret[n])
+            label = tk.Label(secret_frame, text='', fg='black', bg='#2c2c30')
             label.grid(column=n, row=0, padx=1, pady=1, ipadx=38)
 
         # rounds frame (center frame with all player solutions)
@@ -629,6 +629,6 @@ if __name__ == '__main__':
     logging.basicConfig(filename='..\\tests\\log.txt', level=logging.DEBUG,
                         format='%(asctime)s - %(levelname)s - %(message)s')
     pathlib.Path('..\\tests\\log.txt').open('w')
-    board_colour = '#42413e'  # color code for board
+    board_colour = '#6a6c75'  # color code for board
     MainWindow().mainloop()
     logging.debug('close program')
