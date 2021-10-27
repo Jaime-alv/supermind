@@ -1,6 +1,10 @@
 # Supermind
  Classic colour code-breaking game.
 
+# Work In Progress
+
+**Game is not ready, I'm still working on it!**
+
 # The game
 
 The player, as the codebreaker, tries to guess the pattern, in both order and color, within a set number of rounds. 
@@ -59,4 +63,5 @@ On the right side, you can see:
 - Submit button: for submitting your code.
 - Close: Close this window and take you to the main window.
 
+###### Copyright (C) 2021 Jaime Alvarez Fernandez
 
