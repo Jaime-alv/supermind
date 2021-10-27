@@ -521,18 +521,20 @@ class GameWindow(tk.Toplevel):
                 results_dict.setdefault(str(c), 'black')
                 results.append('black')
                 secret[int(c)] = 'used'
-            elif self.colour_dict.get(c) != secret[int(c)] and (self.colour_dict.get(c) in secret):
-                value = 0
-                for y in range(len(secret)):
-                    if self.colour_dict.get(c) == secret[y]:
-                        value = y
-                        break
-                secret[value] = 'used'
-                results_dict.setdefault(str(c), 'white')
-                results.append('white')
             else:
-                results_dict.setdefault(str(c), None)
-                results.append(None)
+                results.append('wrong')
+        for c in self.colour_dict:
+            if results[int(c)] == 'wrong':
+                if self.colour_dict.get(c) in secret:
+                    results[int(c)] = 'white'
+                    results_dict.setdefault(str(c), 'white')
+                    for x in range(len(secret)):
+                        if self.colour_dict.get(c) == secret[x]:
+                            secret[x] = 'used'
+                            break
+                else:
+                    results[int(c)] = None
+                    results_dict.setdefault(str(c), None)
 
         # save game state
         self.game['player'].setdefault(str(self.round), {})
