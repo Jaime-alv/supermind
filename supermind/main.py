@@ -347,20 +347,19 @@ class MainWindow(tk.Tk):
             total_games = profile.get('wins') + profile.get('loses')
             print(total_games)
             total = tk.Label(where, text=f' ·Total games: {total_games}')
-            total.grid(column=1, row=1)
+            total.grid(column=0, row=1, sticky='w')
             win_games = profile.get('wins')
-            win = tk.Label(where, text=f'   ·Total wins: {win_games}')
-            win.grid(column=1, row=2)
+            win = tk.Label(where, text=f'  ·Total wins: {win_games}')
+            win.grid(column=0, row=2, sticky='w')
             loss_games = profile.get('loses')
             loss = tk.Label(where, text=f'  ·Total loses: {loss_games}')
-            loss.grid(column=1, row=3)
-            # todo: solve division by zero
-            win_loss_ratio = round(win_games / loss_games, 2)
-            win_loss = tk.Label(where, text=f'  ·Win/Loss ratio: {win_loss_ratio}')
-            win_loss.grid(column=1, row=4)
+            loss.grid(column=0, row=3, sticky='w')
+            win_loss_ratio = round(win_games * 100 / total_games, 2)
+            win_loss = tk.Label(where, text=f'  ·Win/Loss ratio: {win_loss_ratio}%')
+            win_loss.grid(column=0, row=4, sticky='w')
         else:
             nothing = tk.Label(where, text='    ·No data.')
-            nothing.grid(column=0, row=1)
+            nothing.grid(column=0, row=1, sticky='w')
 
     # create game window
     def game_window(self):
