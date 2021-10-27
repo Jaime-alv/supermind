@@ -339,7 +339,6 @@ class MainWindow(tk.Tk):
         easy_label.grid(column=0, row=0, sticky='w')
         if profile.get('wins') + profile.get('loses') > 0:
             total_games = profile.get('wins') + profile.get('loses')
-            print(total_games)
             total = tk.Label(where, text=f'    ·Total games: {total_games}')
             total.grid(column=0, row=1, sticky='w')
             win_games = profile.get('wins')
