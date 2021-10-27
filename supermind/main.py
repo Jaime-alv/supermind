@@ -53,6 +53,7 @@ class MainWindow(tk.Tk):
         new_item.add_command(label='New profile', command=self.create_new_profile)
         new_item.add_command(label='Load profile', command=self.load_profile)
         new_item.add_command(label='Delete profile', command=self.delete_profile)
+        new_item.add_command(label='Profile statistics', command=self.show_profile)
         new_item.add_separator()
         new_item.add_command(label='About')
         new_item.add_separator()
@@ -109,6 +110,7 @@ class MainWindow(tk.Tk):
                                'custom': {}}}
         for dif in data['statistics']:
             new_stats = dict(stat)
+            # noinspection PyTypeChecker
             data['statistics'][dif] = new_stats
         if not pathlib.Path('profiles').exists():
             pathlib.Path('profiles').mkdir(exist_ok=True)
@@ -297,6 +299,68 @@ class MainWindow(tk.Tk):
             self.game_window()
         else:
             messagebox.showerror('Error!', 'Please, enter valid inputs!')
+
+    # show profile statistics
+    def show_profile(self):
+        if self.player != '':
+            with pathlib.Path(f'profiles\\{self.player}.txt').open('r') as read:
+                profile = json.load(read)
+            # create new window
+            profile_window = tk.Toplevel()
+            profile_window.title(self.player)
+            self.terminate(profile_window, profile_window, 'Close')
+
+            # statistics for easy difficulty
+            easy_frame = tk.Frame(profile_window)
+            easy_frame.pack(anchor='w')
+            easy_label = tk.Label(easy_frame, text=r'» Easy:')
+            easy_label.grid(column=0, row=0, sticky='w')
+            self.profile_unpack(easy_frame, profile['statistics']['easy'])
+
+            # statistics for normal difficulty
+            normal_frame = tk.Frame(profile_window)
+            normal_frame.pack(anchor='w')
+            normal_label = tk.Label(normal_frame, text=r'» Normal:')
+            normal_label.grid(column=0, row=0, sticky='w')
+            self.profile_unpack(normal_frame, profile['statistics']['normal'])
+
+            # statistics for hard difficulty
+            hard_frame = tk.Frame(profile_window)
+            hard_frame.pack(anchor='w')
+            hard_label = tk.Label(hard_frame, text=r'» Hard:')
+            hard_label.grid(column=0, row=0, sticky='w')
+            self.profile_unpack(hard_frame, profile['statistics']['hard'])
+
+            # statistics for custom difficulty
+            custom_frame = tk.Frame(profile_window)
+            custom_frame.pack(anchor='w')
+            custom_label = tk.Label(custom_frame, text=r'» Custom:')
+            custom_label.grid(column=0, row=0, sticky='w')
+            self.profile_unpack(custom_frame, profile['statistics']['custom'])
+
+        else:
+            messagebox.showerror('Error!', 'Select a profile first!')
+
+    # print profile function
+    def profile_unpack(self, where, profile):
+        if profile.get('wins') + profile.get('loses') > 0:
+            total_games = profile.get('wins') + profile.get('loses')
+            print(total_games)
+            total = tk.Label(where, text=f' ·Total games: {total_games}')
+            total.grid(column=1, row=1)
+            win_games = profile.get('wins')
+            win = tk.Label(where, text=f'   ·Total wins: {win_games}')
+            win.grid(column=1, row=2)
+            loss_games = profile.get('loses')
+            loss = tk.Label(where, text=f'  ·Total loses: {loss_games}')
+            loss.grid(column=1, row=3)
+            # todo: solve division by zero
+            win_loss_ratio = round(win_games / loss_games, 2)
+            win_loss = tk.Label(where, text=f'  ·Win/Loss ratio: {win_loss_ratio}')
+            win_loss.grid(column=1, row=4)
+        else:
+            nothing = tk.Label(where, text='    ·No data.')
+            nothing.grid(column=0, row=1)
 
     # create game window
     def game_window(self):
@@ -491,10 +555,18 @@ class GameWindow(tk.Toplevel):
         # win or lose condition
         if all(c == 'black' for c in results):
             messagebox.showinfo('Congratulations!', 'You win.')
+            self.profile['statistics'][self.dif]['wins'] += 1
+            if self.profile['statistics'][self.dif].get('fastest') > (self.round - 1):
+                self.profile['statistics'][self.dif]['fastest'] = (self.round - 1)
+            with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as overwrite:
+                json.dump(self.profile, overwrite)
             self.after_game()
 
         elif self.round > self.rounds:
             messagebox.showinfo('Sorry!', f"You lose. I was thinking in:\n{self.secret}")
+            self.profile['statistics'][self.dif]['loses'] += 1
+            with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as overwrite:
+                json.dump(self.profile, overwrite)
             self.after_game()
 
     # after game, clean and reset fields, call main again
