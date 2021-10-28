@@ -231,44 +231,30 @@ class MainWindow(tk.Tk):
         else:
             messagebox.showerror('Error!', 'Load a profile first!')
 
-    # check number of games is higher than 0
-    def check_games(self):
+    # set options
+    def difficulty(self, dif):
         games = self.games.get()
         if games.isdigit() and int(games) > 0:
-            return int(games)
+            self.profile['config'] = dif
+            self.profile['config']['games'] = int(games)
+            with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as file:
+                json.dump(self.profile, file)
+            self.game_window()
         else:
             messagebox.showerror('Error!', 'Number of games should be higher than 0!')
             self.select_difficult()
 
     # easy
     def easy(self):
-        games = self.check_games()
-        self.profile['config']['difficulty'] = 'easy'
-        self.profile['config']['colours'] = 6
-        self.profile['config']['holes'] = 3
-        self.profile['config']['rounds'] = 12
-        self.profile['config']['games'] = games
-        self.game_window()
+        self.difficulty({'difficulty': 'easy', 'colours': 6, 'holes': 3, 'rounds': 12})
 
     # normal
     def normal(self):
-        games = self.check_games()
-        self.profile['config']['difficulty'] = 'normal'
-        self.profile['config']['colours'] = 6
-        self.profile['config']['holes'] = 4
-        self.profile['config']['rounds'] = 12
-        self.profile['config']['games'] = games
-        self.game_window()
+        self.difficulty({'difficulty': 'normal', 'colours': 6, 'holes': 4, 'rounds': 12})
 
     # hard
     def hard(self):
-        games = self.check_games()
-        self.profile['config']['difficulty'] = 'hard'
-        self.profile['config']['colours'] = 8
-        self.profile['config']['holes'] = 5
-        self.profile['config']['rounds'] = 14
-        self.profile['config']['games'] = games
-        self.game_window()
+        self.difficulty({'difficulty': 'hard', 'colours': 8, 'holes': 5, 'rounds': 14})
 
     # custom mode (create new window for inputting values)
     def custom_frame(self):
@@ -304,14 +290,11 @@ class MainWindow(tk.Tk):
 
     # custom
     def custom(self):
-        games = self.check_games()
         if (0 < self.colours.get() < 9) and (0 < self.holes.get() < 11) and (0 < self.rounds.get() < 101):
-            self.profile['config']['difficulty'] = 'custom'
-            self.profile['config']['colours'] = self.colours.get()
-            self.profile['config']['holes'] = self.holes.get()
-            self.profile['config']['rounds'] = self.rounds.get()
-            self.profile['config']['games'] = games
-            self.game_window()
+            colours = self.colours.get()
+            holes = self.holes.get()
+            rounds = self.rounds.get()
+            self.difficulty({'difficulty': 'custom', 'colours': colours, 'holes': holes, 'rounds': rounds})
         else:
             messagebox.showerror('Error!', 'Please, enter valid inputs!')
 
@@ -374,8 +357,6 @@ class MainWindow(tk.Tk):
 
     # create game window
     def game_window(self):
-        with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as file:
-            json.dump(self.profile, file)
         try:
             self.select_difficult_window.destroy()
         except AttributeError:
