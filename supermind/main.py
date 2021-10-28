@@ -170,7 +170,6 @@ class MainWindow(tk.Tk):
             if messagebox.askyesno('Continue', message=message):
                 self.game_window()
             else:
-                reset_continue_mode(self.profile, self.player)
                 self.select_difficult()
             self.load_profile_window.destroy()
         else:
