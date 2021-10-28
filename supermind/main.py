@@ -170,20 +170,12 @@ class MainWindow(tk.Tk):
             if messagebox.askyesno('Continue', message=message):
                 self.game_window()
             else:
-                self.clear()
+                reset_continue_mode(self.profile, self.player)
                 self.select_difficult()
             self.load_profile_window.destroy()
         else:
             self.select_difficult()
         self.load_profile_window.destroy()
-
-    # reset and clear profile['continue']
-    def clear(self):
-        self.profile['continue']['bool'] = False
-        self.profile['continue']['game_number'] = 1
-        self.profile['continue']['game'].clear()
-        with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as overwrite:
-            json.dump(self.profile, overwrite)
 
     # Delete an existing profile
     def delete_profile(self):
@@ -207,7 +199,7 @@ class MainWindow(tk.Tk):
     # select difficult panel
     def select_difficult(self):
         if self.player != '':
-            self.clear()
+            reset_continue_mode(self.profile, self.player)
             self.select_difficult_window = tk.Toplevel()
             self.select_difficult_window.title('Choose your level')
             # divided in 2 frames; left for normal modes, right for custom
@@ -256,8 +248,6 @@ class MainWindow(tk.Tk):
         self.profile['config']['holes'] = 3
         self.profile['config']['rounds'] = 12
         self.profile['config']['games'] = games
-        with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as file:
-            json.dump(self.profile, file)
         self.game_window()
 
     # normal
@@ -268,8 +258,6 @@ class MainWindow(tk.Tk):
         self.profile['config']['holes'] = 4
         self.profile['config']['rounds'] = 12
         self.profile['config']['games'] = games
-        with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as file:
-            json.dump(self.profile, file)
         self.game_window()
 
     # hard
@@ -280,8 +268,6 @@ class MainWindow(tk.Tk):
         self.profile['config']['holes'] = 5
         self.profile['config']['rounds'] = 14
         self.profile['config']['games'] = games
-        with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as file:
-            json.dump(self.profile, file)
         self.game_window()
 
     # custom mode (create new window for inputting values)
@@ -325,8 +311,6 @@ class MainWindow(tk.Tk):
             self.profile['config']['holes'] = self.holes.get()
             self.profile['config']['rounds'] = self.rounds.get()
             self.profile['config']['games'] = games
-            with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as file:
-                json.dump(self.profile, file)
             self.game_window()
         else:
             messagebox.showerror('Error!', 'Please, enter valid inputs!')
@@ -390,6 +374,8 @@ class MainWindow(tk.Tk):
 
     # create game window
     def game_window(self):
+        with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as file:
+            json.dump(self.profile, file)
         try:
             self.select_difficult_window.destroy()
         except AttributeError:
@@ -406,8 +392,6 @@ class GameWindow(tk.Toplevel):
         self.master = master
         self.title('Supermind')
         self.resizable(False, False)
-        #self.big_frame = tk.Frame(self, bg=board_colour)
-        #self.big_frame.pack(expand=1, fill='both')
         with pathlib.Path(f'profiles\\{self.player}.txt').open('r') as read:
             self.profile = json.load(read)
 
@@ -464,15 +448,11 @@ class GameWindow(tk.Toplevel):
 
     # main game loop
     def main(self):
-        if self.game_number < (self.games + 1):
+        if self.game_number <= self.games:
             self.select_colours()
         else:
             # game is over, time to reset 'continue'
-            self.profile['continue']['bool'] = False
-            self.profile['continue']['game_number'] = 1
-            self.profile['continue']['game'].clear()
-            with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as overwrite:
-                json.dump(self.profile, overwrite)
+            reset_continue_mode(self.profile, self.player)
             messagebox.showinfo('Goodbye', 'Thank you!')
             self.close()
 
@@ -711,7 +691,7 @@ class GameWindow(tk.Toplevel):
 
     # close window and call MainWindow again
     def close(self):
-        if self.round > 1 or self.game_number > 1:
+        if self.round > 1 or 1 < self.game_number <= self.games:
             self.save_all()
         self.master.deiconify()
         self.destroy()
@@ -723,6 +703,14 @@ class GameWindow(tk.Toplevel):
         self.profile['continue']['game'] = self.game
         with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as overwrite:
             json.dump(self.profile, overwrite)
+
+
+def reset_continue_mode(profile, player):
+    profile['continue']['bool'] = False
+    profile['continue']['game_number'] = 1
+    profile['continue']['game'].clear()
+    with pathlib.Path(f'profiles\\{player}.txt').open('w') as overwrite:
+        json.dump(profile, overwrite)
 
 
 if __name__ == '__main__':
