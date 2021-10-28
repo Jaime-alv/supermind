@@ -110,6 +110,8 @@ class MainWindow(tk.Tk):
 
     def create_json(self):
         user = self.user_name.get()
+        validate = re.compile(r'[A-Za-z._-]')
+        mo = validate.search(user)
         stat = {'wins': 0,
                 'loses': 0,
                 'fastest': 100}
@@ -280,8 +282,8 @@ class MainWindow(tk.Tk):
         rounds_ask = tk.Label(questions_frame, text='How many rounds?')
         rounds_ask.grid(column=0, row=2)
         self.rounds = tk.IntVar()
-        self.rounds.set(20)
-        rounds_spin = tk.Spinbox(questions_frame, from_=1, to=100, width=3, textvariable=self.rounds)
+        self.rounds.set(15)
+        rounds_spin = tk.Spinbox(questions_frame, from_=1, to=50, width=3, textvariable=self.rounds)
         rounds_spin.grid(column=1, row=2)
         # submit button
         submit_button = tk.Button(right_frame, text='Submit', command=self.custom)
@@ -289,7 +291,7 @@ class MainWindow(tk.Tk):
 
     # custom
     def custom(self):
-        if (0 < self.colours.get() < 9) and (0 < self.holes.get() < 11) and (0 < self.rounds.get() < 101):
+        if (0 < self.colours.get() < 9) and (0 < self.holes.get() < 11) and (0 < self.rounds.get() < 51):
             colours = self.colours.get()
             holes = self.holes.get()
             rounds = self.rounds.get()
