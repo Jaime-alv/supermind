@@ -446,6 +446,7 @@ class GameWindow(tk.Toplevel):
             self.colour_dict.setdefault(n, '')
         logging.debug(self.colour_dict)
         self.right_frame_window()
+        self.left_frame_window()
 
     # round counter at left most side
     def column_round_counter(self):
@@ -465,7 +466,6 @@ class GameWindow(tk.Toplevel):
     def main(self):
         if self.game_number < (self.games + 1):
             self.select_colours()
-            self.left_frame_window()
         else:
             # game is over, time to reset 'continue'
             self.profile['continue']['bool'] = False
@@ -671,7 +671,8 @@ class GameWindow(tk.Toplevel):
         self.round = 1
         self.game.clear()  # clean game state
         self.secret.clear()  # clear secret in a new game round
-        self.left_frame.destroy()
+        self.center_frame.destroy()
+        self.print_save_board()
         # update game counter
         self.update_game_counter()
         # reset round counter to 1
