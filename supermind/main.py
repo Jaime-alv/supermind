@@ -446,7 +446,7 @@ class GameWindow(tk.Toplevel):
         for game_round in range(1, (self.rounds * 2) + 1):
             row = ((self.rounds * 2) + 1) - game_round
             if game_round % 2 != 0:
-                rd_number = int((game_round/2) + 1)
+                rd_number = int((game_round / 2) + 1)
                 numb = tk.Label(column_round, text=f'{rd_number:02}')
                 numb.grid(column=0, row=row, pady=1)
             else:
@@ -507,35 +507,37 @@ class GameWindow(tk.Toplevel):
     def right_frame_window(self):
         # board's right side (buttons, round, game)
         self.right_frame = tk.Frame(self)
-        self.right_frame.pack(side='right')
+        self.right_frame.pack(side='right', expand=1, fill='both', ipadx=20)
 
         # game counter
-        self.game_counter_call()
+        game_counter = tk.Frame(self.right_frame)
+        game_counter.pack(anchor='center', expand=1)
+        self.game_label = tk.Label(game_counter, text=f'Game #:{self.game_number}')
+        self.game_label.pack(anchor='w', pady=5)
 
         # round counter
-        self.round_counter_call()
+        round_counter = tk.Frame(self.right_frame)
+        round_counter.pack(anchor='n', side='top', expand=0)
+        self.round_label = tk.Label(round_counter, text=f'Round #:{self.round}')
+        self.round_label.pack(anchor='w', pady=5)
 
         # submit button
         submit = tk.Button(self.right_frame, text="Submit", command=self.everything_ok)
-        submit.pack(anchor='s', side='bottom')
+        submit.pack(anchor='s', side='bottom', pady=2, ipadx=20)
 
         # close window & save game
-        close = tk.Button(self.right_frame, text='Close', command=self.close)
-        close.pack(side='bottom')
+        close = tk.Button(self.right_frame, text='Close & save', fg='red', command=self.close)
+        close.pack(side='bottom', anchor='s', pady=2)
 
-    # show game counter in right frame
-    def game_counter_call(self):
-        self.game_counter = tk.Frame(self.right_frame)
-        self.game_counter.pack()
-        game_label = tk.Label(self.game_counter, text=f'Game #:{self.game_number}')
-        game_label.pack()
+    # update game counter
+    def update_game_counter(self):
+        new_game = f'Game #:{self.game_number}'
+        self.game_label.configure(text=new_game)
 
-    # show round counter in right frame
-    def round_counter_call(self):
-        self.round_counter = tk.Frame(self.right_frame)
-        self.round_counter.pack()
-        round_label = tk.Label(self.round_counter, text=f'Round #:{self.round}')
-        round_label.pack()
+    # update round counter
+    def update_round_counter(self):
+        new_round = f'Round #:{self.round}'
+        self.round_label.configure(text=new_round)
 
     # save player's choice in a dictionary so it can be checked later
     def choice_sel(self, event, i):
@@ -586,8 +588,7 @@ class GameWindow(tk.Toplevel):
 
         # add one more round to counter
         self.round += 1
-        self.round_counter.destroy()
-        self.round_counter_call()
+        self.update_round_counter()
         self.center_frame.destroy()
         self.print_save_board()
         logging.warning(f'Result = {results}')
@@ -617,10 +618,10 @@ class GameWindow(tk.Toplevel):
         self.game.clear()  # clean game state
         self.secret.clear()  # clear secret in a new game round
         self.left_frame.destroy()
-        self.game_counter.destroy()  # update game counter
-        self.game_counter_call()
-        self.round_counter.destroy()  # reset round counter to 1
-        self.round_counter_call()
+        # update game counter
+        self.update_game_counter()
+        # reset round counter to 1
+        self.update_round_counter()
         self.main()
 
     # print board and past choices, from bottom to top
