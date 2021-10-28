@@ -497,13 +497,13 @@ class GameWindow(tk.Toplevel):
 
         # answer frame
         player_frame = tk.Frame(self.left_frame, bg=board_colour)
-        player_frame.pack(side='bottom', anchor='se', expand=1, fill='both')
+        player_frame.pack(side='bottom', anchor='s', expand=1, fill='both')
         zero_player = tk.Label(player_frame, text='00', fg=board_colour, bg=board_colour)
         zero_player.grid(column=0, row=0, padx=1)
 
         for n in range(self.holes):
             combo = ttk.Combobox(player_frame, width=10, values=self.colours, state="readonly")
-            combo.grid(column=(n + 1), row=0, padx=0)
+            combo.grid(column=(n + 1), row=0)
             combo.bind("<<ComboboxSelected>>", lambda event, i=n: self.choice_sel(event, i))
 
     # update scrollregion after starting 'mainloop'
