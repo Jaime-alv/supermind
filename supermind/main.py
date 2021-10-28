@@ -405,8 +405,9 @@ class GameWindow(tk.Toplevel):
         self.player = player
         self.master = master
         self.title('Supermind')
-        self.big_frame = tk.Frame(self)
-        self.big_frame.pack(expand=1, fill='both')
+        self.resizable(False, False)
+        #self.big_frame = tk.Frame(self, bg=board_colour)
+        #self.big_frame.pack(expand=1, fill='both')
         with pathlib.Path(f'profiles\\{self.player}.txt').open('r') as read:
             self.profile = json.load(read)
 
@@ -448,16 +449,16 @@ class GameWindow(tk.Toplevel):
 
     # round counter at left most side
     def column_round_counter(self):
-        column_round = tk.Frame(self.frame_inside_canvas)
+        column_round = tk.Frame(self.frame_inside_canvas, bg='black')
         column_round.pack(side='left')
         for game_round in range(1, (self.rounds * 2) + 1):
             row = ((self.rounds * 2) + 1) - game_round
             if game_round % 2 != 0:
                 rd_number = int((game_round / 2) + 1)
-                numb = tk.Label(column_round, text=f'{rd_number:02}')
+                numb = tk.Label(column_round, text=f'{rd_number:02}', bg=board_colour)
                 numb.grid(column=0, row=row, pady=1)
             else:
-                empty = tk.Label(column_round, text='')
+                empty = tk.Label(column_round, text='00', fg=board_colour, bg=board_colour)
                 empty.grid(column=0, row=row, pady=1)
 
     # main game loop
@@ -487,26 +488,28 @@ class GameWindow(tk.Toplevel):
 
     def left_frame_window(self):
         # board's left side (secret code, answer and game state)
-        self.left_frame = tk.Frame(self)
+        self.left_frame = tk.Frame(self, bg=board_colour)
         self.left_frame.pack(side='left', expand=1, fill='both')
 
         # secret code frame
         secret_frame = tk.Frame(self.left_frame, bg=board_colour)
         secret_frame.pack(side='top', anchor='e', expand=1, fill='both')
+        zero_secret = tk.Label(secret_frame, text='00', fg=board_colour, bg=board_colour)
+        zero_secret.grid(column=0, row=0, padx=1, pady=1)
 
         # print pc code
         for n in range(self.holes):
             label = tk.Label(secret_frame, text='', fg='black', bg='#2c2c30')
-            label.grid(column=n, row=0, padx=1, pady=1, ipadx=38)
+            label.grid(column=(n + 1), row=0, padx=1, pady=1, ipadx=38)
 
         # get how much height canvas need
         total_height = self.get_total_height()
         self.unit.destroy()
         screen = self.winfo_screenheight()  # get screen height in pixel
-        if total_height > int((screen * 3)/4):
-            total_height = int((screen * 3)/4)
+        if total_height > int((screen * 3) / 4):
+            total_height = int((screen * 3) / 4)
 
-        self.board_canvas = tk.Canvas(self.left_frame, bg='red')
+        self.board_canvas = tk.Canvas(self.left_frame, bg=board_colour)
         secret_frame.update()
         extension = secret_frame.winfo_width()
 
@@ -523,7 +526,7 @@ class GameWindow(tk.Toplevel):
         # when all widgets are in canvas
         self.board_canvas.bind('<Configure>', self.on_configure)
 
-        self.frame_inside_canvas = tk.Frame(self.board_canvas)
+        self.frame_inside_canvas = tk.Frame(self.board_canvas, bg=board_colour)
         self.board_canvas.create_window((0, 0), window=self.frame_inside_canvas, anchor='nw')
 
         # rounds frame (center frame with all player solutions)
@@ -533,10 +536,12 @@ class GameWindow(tk.Toplevel):
         # answer frame
         player_frame = tk.Frame(self.left_frame, bg=board_colour)
         player_frame.pack(side='bottom', anchor='se', expand=1, fill='both')
+        zero_player = tk.Label(player_frame, text='00', fg=board_colour, bg=board_colour)
+        zero_player.grid(column=0, row=0, padx=1)
 
         for n in range(self.holes):
             combo = ttk.Combobox(player_frame, width=10, values=self.colours, state="readonly")
-            combo.grid(column=n, row=0, padx=1)
+            combo.grid(column=(n + 1), row=0, padx=0)
             combo.bind("<<ComboboxSelected>>", lambda event, i=n: self.choice_sel(event, i))
 
     # update scrollregion after starting 'mainloop'
@@ -552,8 +557,6 @@ class GameWindow(tk.Toplevel):
             row.grid(column=0, row=game_round, pady=1)
         self.unit.update()
         return self.unit.winfo_height()
-
-
 
     def right_frame_window(self):
         # board's right side (buttons, round, game)
