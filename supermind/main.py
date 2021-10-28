@@ -38,6 +38,7 @@ class MainWindow(tk.Tk):
         self.profile_list = []
         self.for_delete = []
         self.player = ''
+        self.profile = {}
         self.super_frame = tk.Frame(self)
         self.title('Supermind')
         self.geometry('250x250')
@@ -139,6 +140,8 @@ class MainWindow(tk.Tk):
 
             # set player to new user and ask for a new game
             self.player = user
+            with pathlib.Path(f'profiles\\{user}.txt').open('r') as file:
+                self.profile = json.load(file)
             self.select_difficult()
         else:
             messagebox.showerror('Error!', "Name can't be empty!")
@@ -168,11 +171,6 @@ class MainWindow(tk.Tk):
                 self.game_window()
             else:
                 self.select_difficult()
-                self.profile['continue']['bool'] = False
-                self.profile['continue']['game_number'] = 1
-                self.profile['continue']['game'].clear()
-                with pathlib.Path(f'profiles\\{name}.txt').open('w') as overwrite:
-                    json.dump(self.profile, overwrite)
             self.load_profile_window.destroy()
         else:
             self.select_difficult()
@@ -200,6 +198,7 @@ class MainWindow(tk.Tk):
     # select difficult panel
     def select_difficult(self):
         if self.player != '':
+            reset_continue_mode(self.profile, self.player)
             self.select_difficult_window = tk.Toplevel()
             self.select_difficult_window.title('Choose your level')
             # divided in 2 frames; left for normal modes, right for custom
@@ -231,50 +230,30 @@ class MainWindow(tk.Tk):
         else:
             messagebox.showerror('Error!', 'Load a profile first!')
 
-    # check number of games is higher than 0
-    def check_games(self):
+    # set options
+    def difficulty(self, dif):
         games = self.games.get()
         if games.isdigit() and int(games) > 0:
-            return int(games)
+            self.profile['config'] = dif
+            self.profile['config']['games'] = int(games)
+            with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as file:
+                json.dump(self.profile, file)
+            self.game_window()
         else:
             messagebox.showerror('Error!', 'Number of games should be higher than 0!')
             self.select_difficult()
 
     # easy
     def easy(self):
-        games = self.check_games()
-        self.profile['config']['difficulty'] = 'easy'
-        self.profile['config']['colours'] = 6
-        self.profile['config']['holes'] = 3
-        self.profile['config']['rounds'] = 12
-        self.profile['config']['games'] = games
-        with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as file:
-            json.dump(self.profile, file)
-        self.game_window()
+        self.difficulty({'difficulty': 'easy', 'colours': 6, 'holes': 3, 'rounds': 12})
 
     # normal
     def normal(self):
-        games = self.check_games()
-        self.profile['config']['difficulty'] = 'normal'
-        self.profile['config']['colours'] = 6
-        self.profile['config']['holes'] = 4
-        self.profile['config']['rounds'] = 12
-        self.profile['config']['games'] = games
-        with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as file:
-            json.dump(self.profile, file)
-        self.game_window()
+        self.difficulty({'difficulty': 'normal', 'colours': 6, 'holes': 4, 'rounds': 12})
 
     # hard
     def hard(self):
-        games = self.check_games()
-        self.profile['config']['difficulty'] = 'hard'
-        self.profile['config']['colours'] = 8
-        self.profile['config']['holes'] = 5
-        self.profile['config']['rounds'] = 14
-        self.profile['config']['games'] = games
-        with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as file:
-            json.dump(self.profile, file)
-        self.game_window()
+        self.difficulty({'difficulty': 'hard', 'colours': 8, 'holes': 5, 'rounds': 14})
 
     # custom mode (create new window for inputting values)
     def custom_frame(self):
@@ -310,16 +289,11 @@ class MainWindow(tk.Tk):
 
     # custom
     def custom(self):
-        games = self.check_games()
         if (0 < self.colours.get() < 9) and (0 < self.holes.get() < 11) and (0 < self.rounds.get() < 101):
-            self.profile['config']['difficulty'] = 'custom'
-            self.profile['config']['colours'] = self.colours.get()
-            self.profile['config']['holes'] = self.holes.get()
-            self.profile['config']['rounds'] = self.rounds.get()
-            self.profile['config']['games'] = games
-            with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as file:
-                json.dump(self.profile, file)
-            self.game_window()
+            colours = self.colours.get()
+            holes = self.holes.get()
+            rounds = self.rounds.get()
+            self.difficulty({'difficulty': 'custom', 'colours': colours, 'holes': holes, 'rounds': rounds})
         else:
             messagebox.showerror('Error!', 'Please, enter valid inputs!')
 
@@ -397,8 +371,7 @@ class GameWindow(tk.Toplevel):
         self.player = player
         self.master = master
         self.title('Supermind')
-        self.big_frame = tk.Frame(self)
-        self.big_frame.pack(expand=1, fill='both')
+        self.resizable(False, False)
         with pathlib.Path(f'profiles\\{self.player}.txt').open('r') as read:
             self.profile = json.load(read)
 
@@ -437,34 +410,29 @@ class GameWindow(tk.Toplevel):
             self.colour_dict.setdefault(n, '')
         logging.debug(self.colour_dict)
         self.right_frame_window()
-        self.column_round_counter()
+        self.left_frame_window()
 
     # round counter at left most side
     def column_round_counter(self):
-        column_round = tk.Frame(self)
+        column_round = tk.Frame(self.frame_inside_canvas, bg='black')
         column_round.pack(side='left')
         for game_round in range(1, (self.rounds * 2) + 1):
             row = ((self.rounds * 2) + 1) - game_round
             if game_round % 2 != 0:
-                rd_number = int((game_round/2) + 1)
-                numb = tk.Label(column_round, text=f'{rd_number:02}')
+                rd_number = int((game_round / 2) + 1)
+                numb = tk.Label(column_round, text=f'{rd_number:02}', bg=board_colour)
                 numb.grid(column=0, row=row, pady=1)
             else:
-                empty = tk.Label(column_round, text='')
+                empty = tk.Label(column_round, text='00', fg=board_colour, bg=board_colour)
                 empty.grid(column=0, row=row, pady=1)
 
     # main game loop
     def main(self):
-        if self.game_number < (self.games + 1):
+        if self.game_number <= self.games:
             self.select_colours()
-            self.left_frame_window()
         else:
             # game is over, time to reset 'continue'
-            self.profile['continue']['bool'] = False
-            self.profile['continue']['game_number'] = 1
-            self.profile['continue']['game'].clear()
-            with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as overwrite:
-                json.dump(self.profile, overwrite)
+            reset_continue_mode(self.profile, self.player)
             messagebox.showinfo('Goodbye', 'Thank you!')
             self.close()
 
@@ -480,62 +448,110 @@ class GameWindow(tk.Toplevel):
 
     def left_frame_window(self):
         # board's left side (secret code, answer and game state)
-        self.left_frame = tk.Frame(self)
-        self.left_frame.pack(side='left')
+        self.left_frame = tk.Frame(self, bg=board_colour)
+        self.left_frame.pack(side='left', expand=1, fill='both')
 
         # secret code frame
         secret_frame = tk.Frame(self.left_frame, bg=board_colour)
-        secret_frame.pack(side='top', expand=1, fill='both')
+        secret_frame.pack(side='top', anchor='e', expand=1, fill='both')
+        zero_secret = tk.Label(secret_frame, text='00', fg=board_colour, bg=board_colour)
+        zero_secret.grid(column=0, row=0, padx=1, pady=1)
 
         # print pc code
         for n in range(self.holes):
             label = tk.Label(secret_frame, text='', fg='black', bg='#2c2c30')
-            label.grid(column=n, row=0, padx=1, pady=1, ipadx=38)
+            label.grid(column=(n + 1), row=0, padx=1, pady=1, ipadx=38)
+
+        # get how much height canvas need
+        total_height = self.get_total_height()
+        self.unit.destroy()
+        screen = self.winfo_screenheight()  # get screen height in pixel
+        if total_height > int((screen * 3) / 4):
+            total_height = int((screen * 3) / 4)
+
+        self.board_canvas = tk.Canvas(self.left_frame, bg=board_colour)
+        secret_frame.update()
+        extension = secret_frame.winfo_width()
+
+        self.board_canvas.configure(width=extension, height=total_height)
+        self.board_canvas.update()
+        self.board_canvas.pack(expand=0, fill='y')
+
+        scrollbar = tk.Scrollbar(self, command=self.board_canvas.yview)
+        scrollbar.pack(side='left', fill='y')
+
+        self.board_canvas.configure(yscrollcommand=scrollbar.set)
+
+        # update scrollregion after starting 'mainloop'
+        # when all widgets are in canvas
+        self.board_canvas.bind('<Configure>', self.on_configure)
+
+        self.frame_inside_canvas = tk.Frame(self.board_canvas, bg=board_colour)
+        self.board_canvas.create_window((0, 0), window=self.frame_inside_canvas, anchor='nw')
 
         # rounds frame (center frame with all player solutions)
+        self.column_round_counter()
         self.print_save_board()
 
         # answer frame
         player_frame = tk.Frame(self.left_frame, bg=board_colour)
-        player_frame.pack(side='bottom', anchor='s', expand=1, fill='both')
+        player_frame.pack(side='bottom', anchor='se', expand=1, fill='both')
+        zero_player = tk.Label(player_frame, text='00', fg=board_colour, bg=board_colour)
+        zero_player.grid(column=0, row=0, padx=1)
 
         for n in range(self.holes):
             combo = ttk.Combobox(player_frame, width=10, values=self.colours, state="readonly")
-            combo.grid(column=n, row=0, padx=1)
+            combo.grid(column=(n + 1), row=0, padx=0)
             combo.bind("<<ComboboxSelected>>", lambda event, i=n: self.choice_sel(event, i))
+
+    # update scrollregion after starting 'mainloop'
+    # when all widgets are in canvas
+    def on_configure(self, event):
+        self.board_canvas.configure(scrollregion=self.board_canvas.bbox('all'))
+
+    def get_total_height(self):
+        self.unit = tk.Frame(self.left_frame)
+        self.unit.pack()
+        for game_round in range(self.rounds * 2):
+            row = tk.Label(self.unit)
+            row.grid(column=0, row=game_round, pady=1)
+        self.unit.update()
+        return self.unit.winfo_height()
 
     def right_frame_window(self):
         # board's right side (buttons, round, game)
         self.right_frame = tk.Frame(self)
-        self.right_frame.pack(side='right')
+        self.right_frame.pack(side='right', expand=1, fill='both', ipadx=20)
 
         # game counter
-        self.game_counter_call()
+        game_counter = tk.Frame(self.right_frame)
+        game_counter.pack(anchor='center', expand=1)
+        self.game_label = tk.Label(game_counter, text=f'Game #:{self.game_number}')
+        self.game_label.pack(anchor='w', pady=5)
 
         # round counter
-        self.round_counter_call()
+        round_counter = tk.Frame(self.right_frame)
+        round_counter.pack(anchor='n', side='top', expand=0)
+        self.round_label = tk.Label(round_counter, text=f'Round #:{self.round}')
+        self.round_label.pack(anchor='w', pady=5)
 
         # submit button
         submit = tk.Button(self.right_frame, text="Submit", command=self.everything_ok)
-        submit.pack(anchor='s', side='bottom')
+        submit.pack(anchor='s', side='bottom', pady=2, ipadx=20)
 
         # close window & save game
-        close = tk.Button(self.right_frame, text='Close', command=self.close)
-        close.pack(side='bottom')
+        close = tk.Button(self.right_frame, text='Close & save', fg='red', command=self.close)
+        close.pack(side='bottom', anchor='s', pady=2)
 
-    # show game counter in right frame
-    def game_counter_call(self):
-        self.game_counter = tk.Frame(self.right_frame)
-        self.game_counter.pack()
-        game_label = tk.Label(self.game_counter, text=f'Game #:{self.game_number}')
-        game_label.pack()
+    # update game counter
+    def update_game_counter(self):
+        new_game = f'Game #:{self.game_number}'
+        self.game_label.configure(text=new_game)
 
-    # show round counter in right frame
-    def round_counter_call(self):
-        self.round_counter = tk.Frame(self.right_frame)
-        self.round_counter.pack()
-        round_label = tk.Label(self.round_counter, text=f'Round #:{self.round}')
-        round_label.pack()
+    # update round counter
+    def update_round_counter(self):
+        new_round = f'Round #:{self.round}'
+        self.round_label.configure(text=new_round)
 
     # save player's choice in a dictionary so it can be checked later
     def choice_sel(self, event, i):
@@ -543,7 +559,7 @@ class GameWindow(tk.Toplevel):
 
     # form validation from submit button
     def everything_ok(self):
-        if all(self.colour_dict.get(str(c)) != '' for c in self.colour_dict):
+        if all(self.colour_dict.get(c) != '' for c in self.colour_dict):
             self.compare_player()
         else:
             messagebox.showerror('Error!', 'There is an empty field.')
@@ -586,8 +602,7 @@ class GameWindow(tk.Toplevel):
 
         # add one more round to counter
         self.round += 1
-        self.round_counter.destroy()
-        self.round_counter_call()
+        self.update_round_counter()
         self.center_frame.destroy()
         self.print_save_board()
         logging.warning(f'Result = {results}')
@@ -616,19 +631,20 @@ class GameWindow(tk.Toplevel):
         self.round = 1
         self.game.clear()  # clean game state
         self.secret.clear()  # clear secret in a new game round
-        self.left_frame.destroy()
-        self.game_counter.destroy()  # update game counter
-        self.game_counter_call()
-        self.round_counter.destroy()  # reset round counter to 1
-        self.round_counter_call()
+        self.center_frame.destroy()
+        self.print_save_board()
+        # update game counter
+        self.update_game_counter()
+        # reset round counter to 1
+        self.update_round_counter()
         self.main()
 
     # print board and past choices, from bottom to top
     # uneven rows are player choices
     # even rows are the result from comparing player choices against the secret code
     def print_save_board(self):
-        self.center_frame = tk.Frame(self.left_frame, bg='black')
-        self.center_frame.pack(side='top', anchor='n')
+        self.center_frame = tk.Frame(self.frame_inside_canvas, bg='black')
+        self.center_frame.pack()
         for game_round in range(1, (self.rounds * 2) + 1):
             row = ((self.rounds * 2) + 1) - game_round
             if game_round % 2 != 0:  # player choice
@@ -655,7 +671,8 @@ class GameWindow(tk.Toplevel):
 
     # close window and call MainWindow again
     def close(self):
-        self.save_all()
+        if self.round > 1 or 1 < self.game_number <= self.games:
+            self.save_all()
         self.master.deiconify()
         self.destroy()
 
@@ -666,6 +683,14 @@ class GameWindow(tk.Toplevel):
         self.profile['continue']['game'] = self.game
         with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as overwrite:
             json.dump(self.profile, overwrite)
+
+
+def reset_continue_mode(profile, player):
+    profile['continue']['bool'] = False
+    profile['continue']['game_number'] = 1
+    profile['continue']['game'].clear()
+    with pathlib.Path(f'profiles\\{player}.txt').open('w') as overwrite:
+        json.dump(profile, overwrite)
 
 
 if __name__ == '__main__':
