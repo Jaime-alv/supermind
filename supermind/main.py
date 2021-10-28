@@ -499,10 +499,18 @@ class GameWindow(tk.Toplevel):
             label = tk.Label(secret_frame, text='', fg='black', bg='#2c2c30')
             label.grid(column=n, row=0, padx=1, pady=1, ipadx=38)
 
+        # get how much height canvas need
+        total_height = self.get_total_height()
+        self.unit.destroy()
+        screen = self.winfo_screenheight()  # get screen height in pixel
+        if total_height > int((screen * 3)/4):
+            total_height = int((screen * 3)/4)
+
         self.board_canvas = tk.Canvas(self.left_frame, bg='red')
         secret_frame.update()
         extension = secret_frame.winfo_width()
-        self.board_canvas.configure(width=extension)
+
+        self.board_canvas.configure(width=extension, height=total_height)
         self.board_canvas.update()
         self.board_canvas.pack(expand=0, fill='y')
 
@@ -535,6 +543,17 @@ class GameWindow(tk.Toplevel):
     # when all widgets are in canvas
     def on_configure(self, event):
         self.board_canvas.configure(scrollregion=self.board_canvas.bbox('all'))
+
+    def get_total_height(self):
+        self.unit = tk.Frame(self.left_frame)
+        self.unit.pack()
+        for game_round in range(self.rounds * 2):
+            row = tk.Label(self.unit)
+            row.grid(column=0, row=game_round, pady=1)
+        self.unit.update()
+        return self.unit.winfo_height()
+
+
 
     def right_frame_window(self):
         # board's right side (buttons, round, game)
