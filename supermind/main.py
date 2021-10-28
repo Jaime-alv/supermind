@@ -579,7 +579,7 @@ class GameWindow(tk.Toplevel):
 
     # form validation from submit button
     def everything_ok(self):
-        if all(self.colour_dict.get(str(c)) != '' for c in self.colour_dict):
+        if all(self.colour_dict.get(c) != '' for c in self.colour_dict):
             self.compare_player()
         else:
             messagebox.showerror('Error!', 'There is an empty field.')
