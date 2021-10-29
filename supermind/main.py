@@ -110,6 +110,7 @@ class MainWindow(tk.Tk):
 
     def create_json(self):
         user = self.user_name.get()
+        # todo: validate name
         validate = re.compile(r'[A-Za-z._-]')
         mo = validate.search(user)
         stat = {'wins': 0,
@@ -141,8 +142,7 @@ class MainWindow(tk.Tk):
 
             # set player to new user and ask for a new game
             self.player = user
-            with pathlib.Path(f'profiles\\{user}.txt').open('r') as file:
-                self.profile = json.load(file)
+            self.profile = read_profile(self.player)
             self.select_difficult()
         else:
             messagebox.showerror('Error!', "Name can't be empty!")
@@ -164,8 +164,7 @@ class MainWindow(tk.Tk):
 
     def load_this(self, name):
         self.player = name
-        with pathlib.Path(f'profiles\\{name}.txt').open('r') as file:
-            self.profile = json.load(file)
+        self.profile = read_profile(self.player)
         if self.profile['continue'].get('bool', None):
             message = 'There is a game going.\nWould you like to continue it?'
             if messagebox.askyesno('Continue', message=message):
@@ -300,8 +299,7 @@ class MainWindow(tk.Tk):
     # show profile statistics
     def show_profile(self):
         if self.player != '':
-            with pathlib.Path(f'profiles\\{self.player}.txt').open('r') as read:
-                profile = json.load(read)
+            player_profile = read_profile(self.player)
             # create new window
             profile_window = tk.Toplevel()
             profile_window.title(self.player)
@@ -310,22 +308,22 @@ class MainWindow(tk.Tk):
             # statistics for easy difficulty
             easy_frame = tk.Frame(profile_window)
             easy_frame.pack(anchor='w')
-            self.profile_unpack(easy_frame, profile['statistics']['easy'], 'Easy')
+            self.profile_unpack(easy_frame, player_profile['statistics']['easy'], 'Easy')
 
             # statistics for normal difficulty
             normal_frame = tk.Frame(profile_window)
             normal_frame.pack(anchor='w')
-            self.profile_unpack(normal_frame, profile['statistics']['normal'], 'Normal')
+            self.profile_unpack(normal_frame, player_profile['statistics']['normal'], 'Normal')
 
             # statistics for hard difficulty
             hard_frame = tk.Frame(profile_window)
             hard_frame.pack(anchor='w')
-            self.profile_unpack(hard_frame, profile['statistics']['hard'], 'Hard')
+            self.profile_unpack(hard_frame, player_profile['statistics']['hard'], 'Hard')
 
             # statistics for custom difficulty
             custom_frame = tk.Frame(profile_window)
             custom_frame.pack(anchor='w')
-            self.profile_unpack(custom_frame, profile['statistics']['custom'], 'Custom')
+            self.profile_unpack(custom_frame, player_profile['statistics']['custom'], 'Custom')
 
         else:
             messagebox.showerror('Error!', 'Select a profile first!')
@@ -372,8 +370,7 @@ class GameWindow(tk.Toplevel):
         self.master = master
         self.title('Supermind')
         self.resizable(False, False)
-        with pathlib.Path(f'profiles\\{self.player}.txt').open('r') as read:
-            self.profile = json.load(read)
+        self.profile = read_profile(self.player)
 
         # unpack all fields
         self.holes = self.profile['config'].get('holes')
@@ -698,6 +695,12 @@ def reset_continue_mode(profile, player):
 def save_profile(profile, player):
     with pathlib.Path(f'profiles\\{player}.txt').open('w') as overwrite:
         json.dump(profile, overwrite)
+
+
+def read_profile(player):
+    with pathlib.Path(f'profiles\\{player}.txt').open('r') as read:
+        profile = json.load(read)
+    return profile
 
 
 if __name__ == '__main__':
