@@ -1,6 +1,8 @@
 # Supermind
  Classic colour code-breaking game.
 
+The script is entirely written in Python, and only using standard libraries for the added challenge.
+
 # Work In Progress
 
 **Game is not ready, I'm still working on it!**
