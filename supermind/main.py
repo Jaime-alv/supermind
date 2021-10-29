@@ -211,7 +211,7 @@ class MainWindow(tk.Tk):
         if self.player != '':
             reset_continue_mode(self.profile, self.player)
             self.select_difficult_window = tk.Toplevel()
-            self.select_difficult_window.title('Choose your level')
+            self.select_difficult_window.title('Options')
             # divided in 2 frames; left for normal modes, right for custom
             left_frame = tk.Frame(self.select_difficult_window)
             left_frame.pack(side='left')
@@ -234,11 +234,11 @@ class MainWindow(tk.Tk):
 
             # radiobutton with classic mode and extra hard mode
             self.game_mode = tk.BooleanVar()
-            extra_hard = tk.Radiobutton(left_frame, text='Extra hard mode', value=True, variable=self.game_mode)
-            extra_hard.pack()
             classic_mode = tk.Radiobutton(left_frame, text='Classic mode', value=False, variable=self.game_mode,
                                           state='active')
-            classic_mode.pack()
+            classic_mode.pack(anchor='w')
+            extra_hard = tk.Radiobutton(left_frame, text='Extra hard mode', value=True, variable=self.game_mode)
+            extra_hard.pack(anchor='w')
 
             # ask for number of games
             games_label = tk.Label(left_frame, text="How many games will be playing?")
