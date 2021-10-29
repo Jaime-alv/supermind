@@ -231,10 +231,14 @@ class MainWindow(tk.Tk):
             # custom (up to 8 colours, up to 8 holes?)
             custom = tk.Button(four_buttons, text='Custom', command=self.custom_frame)
             custom.grid(column=1, row=1)
-            # extra hard?
-            self.check_extra = tk.BooleanVar()
-            extra = tk.Checkbutton(left_frame, text='Extra hard mode?', variable=self.check_extra)
-            extra.pack()
+
+            # radiobutton with classic mode and extra hard mode
+            self.game_mode = tk.BooleanVar()
+            extra_hard = tk.Radiobutton(left_frame, text='Extra hard mode', value=True, variable=self.game_mode)
+            extra_hard.pack()
+            classic_mode = tk.Radiobutton(left_frame, text='Classic mode', value=False, variable=self.game_mode,
+                                          state='active')
+            classic_mode.pack()
 
             # ask for number of games
             games_label = tk.Label(left_frame, text="How many games will be playing?")
@@ -253,7 +257,7 @@ class MainWindow(tk.Tk):
         games = self.games.get()
         if games.isdigit() and int(games) > 0:
             self.profile['config'] = dif
-            self.profile['config']['extra_hard'] = self.check_extra.get()
+            self.profile['config']['extra_hard'] = self.game_mode.get()
             self.profile['config']['games'] = int(games)
             save_profile(self.profile, self.player)
             self.game_window()
