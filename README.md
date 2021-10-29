@@ -53,7 +53,7 @@ and custom.
    - Easy: 6 different colours, 3 holes and 12 rounds.
    - Normal: 6 different colours, 4 holes and 12 rounds.
    - Hard: 8 different colours, 5 holes and 14 rounds.
-   - Custom: you can customize your experience here with: Up to 8 different colours; up to 10 holes; up to 100 rounds 
+   - Custom: you can customize your experience here with: Up to 8 different colours; up to 10 holes; up to 50 rounds 
    in each game.
 
 ## Board Window
@@ -68,7 +68,7 @@ On the right side, you can see:
 - Game counter: current game you're playing.
 - Round counter: current round you're about to submit.
 - Submit button: for submitting your code.
-- Close: Close this window and take you to the main window.
+- Close: Close this window and take you to the main window, the game will save its state, so you can continue it later.
 
 ###### Copyright (C) 2021 Jaime Alvarez Fernandez
 
