@@ -233,7 +233,7 @@ class MainWindow(tk.Tk):
             custom.grid(column=1, row=1)
             # extra hard?
             self.check_extra = tk.BooleanVar()
-            extra = tk.Checkbutton(left_frame, text='Extra hard?', variable=self.check_extra)
+            extra = tk.Checkbutton(left_frame, text='Extra hard mode?', variable=self.check_extra)
             extra.pack()
 
             # ask for number of games
