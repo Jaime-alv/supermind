@@ -423,10 +423,10 @@ class GameWindow(tk.Toplevel):
             if game_round % 2 != 0:
                 rd_number = int((game_round / 2) + 1)
                 numb = tk.Label(column_round, text=f'{rd_number:02}', bg=board_colour)
-                numb.grid(column=0, row=row, pady=1)
+                numb.grid(column=0, row=row, pady=1, padx=1)
             else:
                 empty = tk.Label(column_round, text='00', fg=board_colour, bg=board_colour)
-                empty.grid(column=0, row=row, pady=1)
+                empty.grid(column=0, row=row, pady=1, padx=1)
 
     # main game loop
     def main(self):
@@ -449,44 +449,51 @@ class GameWindow(tk.Toplevel):
         logging.critical(f'SECRET CODE = {self.secret}')
 
     def left_frame_window(self):
+        show_scrollbar = False
         # board's left side (secret code, answer and game state)
-        self.left_frame = tk.Frame(self, bg=board_colour)
+        self.left_frame = tk.Frame(self)
         self.left_frame.pack(side='left', expand=1, fill='both')
 
         # secret code frame
-        secret_frame = tk.Frame(self.left_frame, bg=board_colour)
+        secret_frame = tk.Frame(self.left_frame, bg='black')
         secret_frame.pack(side='top', anchor='e', expand=1, fill='both')
-        zero_secret = tk.Label(secret_frame, text='00', fg=board_colour, bg=board_colour)
+        zero_secret = tk.Label(secret_frame, text='00', fg='black', bg='black')
         zero_secret.grid(column=0, row=0, padx=1, pady=1)
 
         # print pc code
         for n in range(self.holes):
-            label = tk.Label(secret_frame, text='', fg='black', bg='#2c2c30')
-            label.grid(column=(n + 1), row=0, padx=1, pady=1, ipadx=38)
+            label = tk.Label(secret_frame, text='', fg='black', bg='#2c2c30', width=11)
+            label.grid(column=(n + 1), row=0, padx=1, pady=1)
 
         # get how much height canvas need
         total_height = self.get_total_height()
         self.unit.destroy()
         screen = self.winfo_screenheight()  # get screen height in pixel
         if total_height > int((screen * 3) / 4):
+            show_scrollbar = True
             total_height = int((screen * 3) / 4)
 
         self.board_canvas = tk.Canvas(self.left_frame, bg=board_colour)
         secret_frame.update()
         extension = secret_frame.winfo_width()
 
-        self.board_canvas.configure(width=extension, height=total_height)
-        self.board_canvas.update()
-        self.board_canvas.pack(expand=0, fill='y')
+        if show_scrollbar:
+            self.board_canvas.configure(width=extension, height=total_height)
+            self.board_canvas.update()
+            self.board_canvas.pack(expand=0, fill='y')
 
-        scrollbar = tk.Scrollbar(self, command=self.board_canvas.yview)
-        scrollbar.pack(side='left', fill='y')
+            scrollbar = tk.Scrollbar(self, command=self.board_canvas.yview)
+            scrollbar.pack(side='left', fill='y')
+            self.board_canvas.configure(yscrollcommand=scrollbar.set)
 
-        self.board_canvas.configure(yscrollcommand=scrollbar.set)
+            # update scrollregion after starting 'mainloop'
+            # when all widgets are in canvas
+            self.board_canvas.bind('<Configure>', self.on_configure)
 
-        # update scrollregion after starting 'mainloop'
-        # when all widgets are in canvas
-        self.board_canvas.bind('<Configure>', self.on_configure)
+        else:
+            self.board_canvas.configure(width=(extension - 2), height=(total_height - 2))
+            self.board_canvas.update()
+            self.board_canvas.pack(expand=0, fill='y')
 
         self.frame_inside_canvas = tk.Frame(self.board_canvas, bg=board_colour)
         self.board_canvas.create_window((0, 0), window=self.frame_inside_canvas, anchor='nw')
@@ -496,14 +503,14 @@ class GameWindow(tk.Toplevel):
         self.print_save_board()
 
         # answer frame
-        player_frame = tk.Frame(self.left_frame, bg=board_colour)
+        player_frame = tk.Frame(self.left_frame, bg='black')
         player_frame.pack(side='bottom', anchor='s', expand=1, fill='both')
-        zero_player = tk.Label(player_frame, text='00', fg=board_colour, bg=board_colour)
+        zero_player = tk.Label(player_frame, text='00', fg='black', bg='black')
         zero_player.grid(column=0, row=0, padx=1)
 
         for n in range(self.holes):
             combo = ttk.Combobox(player_frame, width=10, values=self.colours, state="readonly")
-            combo.grid(column=(n + 1), row=0)
+            combo.grid(column=(n + 1), row=0, padx=1)
             combo.bind("<<ComboboxSelected>>", lambda event, i=n: self.choice_sel(event, i))
 
     # update scrollregion after starting 'mainloop'
@@ -658,8 +665,8 @@ class GameWindow(tk.Toplevel):
                         tag_colour = None
                     if tag_colour is None:
                         tag_colour = board_colour
-                    player_result = tk.Label(self.center_frame, bg=tag_colour)
-                    player_result.grid(column=peg, row=row, padx=1, pady=1, ipadx=38)
+                    player_result = tk.Label(self.center_frame, bg=tag_colour, width=11)
+                    player_result.grid(column=peg, row=row, padx=1, pady=1)
             elif game_round % 2 == 0:  # result
                 for peg in range(self.holes):
                     try:
@@ -668,8 +675,8 @@ class GameWindow(tk.Toplevel):
                         tag_colour = None
                     if tag_colour is None:
                         tag_colour = board_colour
-                    player_result = tk.Label(self.center_frame, bg=tag_colour)
-                    player_result.grid(column=peg, row=row, padx=1, pady=1, ipadx=38)
+                    player_result = tk.Label(self.center_frame, bg=tag_colour, width=11)
+                    player_result.grid(column=peg, row=row, padx=1, pady=1)
 
     # close window and call MainWindow again
     def close(self):
