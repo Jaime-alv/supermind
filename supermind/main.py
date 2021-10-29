@@ -19,9 +19,10 @@
 # ==========================================================================
 import pathlib
 import random
-import tkinter as tk
+import string
 import json
 import re
+import tkinter as tk
 from tkinter import messagebox
 from tkinter import ttk
 import logging
@@ -102,20 +103,34 @@ class MainWindow(tk.Tk):
         label = tk.Label(self.new_profile_window, text='Enter your name:')
         label.pack()
         self.user_name = tk.StringVar()
-        name_entry = tk.Entry(self.new_profile_window, textvariable=self.user_name)
-        name_entry.pack()
-        name_entry.focus()
-        submit = tk.Button(self.new_profile_window, text='Submit', command=self.create_json)
+        self.name_entry = tk.Entry(self.new_profile_window, textvariable=self.user_name)
+        self.name_entry.pack()
+        self.name_entry.focus()
+        submit = tk.Button(self.new_profile_window, text='Submit', command=self.validate_name)
         submit.pack()
 
-    def create_json(self):
+    def validate_name(self):
         user = self.user_name.get()
-        validate = re.compile(r'[A-Za-z._-]')
-        mo = validate.search(user)
+        self.create_profile_list()
+        valid_characters = string.ascii_letters + string.digits + "_-."
+        if all(c in valid_characters for c in user):
+            self.player = user
+            self.create_json()
+        else:
+            if user == '':
+                messagebox.showerror('Error!', "Name can't be empty!")
+            elif user in self.profile_list:
+                messagebox.showerror('Error!', "There is another user with that name!")
+            else:
+                messagebox.showerror('Error!', "Please, only valid characters!")
+            self.user_name.set('')
+            self.name_entry.focus()
+
+    def create_json(self):
         stat = {'wins': 0,
                 'loses': 0,
                 'fastest': 100}
-        data = {'name': user,
+        data = {'name': self.player,
                 'config': {
                     'difficulty': '',
                     'colours': 0,
@@ -135,18 +150,12 @@ class MainWindow(tk.Tk):
             data['statistics'][dif] = new_stats
         if not pathlib.Path('profiles').exists():
             pathlib.Path('profiles').mkdir(exist_ok=True)
-        if user != '':
-            with pathlib.Path(f'profiles\\{user}.txt').open('w') as file:
-                json.dump(data, file)
-            self.new_profile_window.destroy()
+        save_profile(data, self.player)
+        self.new_profile_window.destroy()
 
-            # set player to new user and ask for a new game
-            self.player = user
-            with pathlib.Path(f'profiles\\{user}.txt').open('r') as file:
-                self.profile = json.load(file)
-            self.select_difficult()
-        else:
-            messagebox.showerror('Error!', "Name can't be empty!")
+        # set player to new user and ask for a new game
+        self.profile = read_profile(self.player)
+        self.select_difficult()
 
     # load an existing profile
     def load_profile(self):
@@ -165,8 +174,7 @@ class MainWindow(tk.Tk):
 
     def load_this(self, name):
         self.player = name
-        with pathlib.Path(f'profiles\\{name}.txt').open('r') as file:
-            self.profile = json.load(file)
+        self.profile = read_profile(self.player)
         if self.profile['continue'].get('bool', None):
             message = 'There is a game going.\nWould you like to continue it?'
             if messagebox.askyesno('Continue', message=message):
@@ -238,8 +246,7 @@ class MainWindow(tk.Tk):
         if games.isdigit() and int(games) > 0:
             self.profile['config'] = dif
             self.profile['config']['games'] = int(games)
-            with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as file:
-                json.dump(self.profile, file)
+            save_profile(self.profile, self.player)
             self.game_window()
         else:
             messagebox.showerror('Error!', 'Number of games should be higher than 0!')
@@ -302,8 +309,7 @@ class MainWindow(tk.Tk):
     # show profile statistics
     def show_profile(self):
         if self.player != '':
-            with pathlib.Path(f'profiles\\{self.player}.txt').open('r') as read:
-                profile = json.load(read)
+            player_profile = read_profile(self.player)
             # create new window
             profile_window = tk.Toplevel()
             profile_window.title(self.player)
@@ -312,22 +318,22 @@ class MainWindow(tk.Tk):
             # statistics for easy difficulty
             easy_frame = tk.Frame(profile_window)
             easy_frame.pack(anchor='w')
-            self.profile_unpack(easy_frame, profile['statistics']['easy'], 'Easy')
+            self.profile_unpack(easy_frame, player_profile['statistics']['easy'], 'Easy')
 
             # statistics for normal difficulty
             normal_frame = tk.Frame(profile_window)
             normal_frame.pack(anchor='w')
-            self.profile_unpack(normal_frame, profile['statistics']['normal'], 'Normal')
+            self.profile_unpack(normal_frame, player_profile['statistics']['normal'], 'Normal')
 
             # statistics for hard difficulty
             hard_frame = tk.Frame(profile_window)
             hard_frame.pack(anchor='w')
-            self.profile_unpack(hard_frame, profile['statistics']['hard'], 'Hard')
+            self.profile_unpack(hard_frame, player_profile['statistics']['hard'], 'Hard')
 
             # statistics for custom difficulty
             custom_frame = tk.Frame(profile_window)
             custom_frame.pack(anchor='w')
-            self.profile_unpack(custom_frame, profile['statistics']['custom'], 'Custom')
+            self.profile_unpack(custom_frame, player_profile['statistics']['custom'], 'Custom')
 
         else:
             messagebox.showerror('Error!', 'Select a profile first!')
@@ -374,8 +380,7 @@ class GameWindow(tk.Toplevel):
         self.master = master
         self.title('Supermind')
         self.resizable(False, False)
-        with pathlib.Path(f'profiles\\{self.player}.txt').open('r') as read:
-            self.profile = json.load(read)
+        self.profile = read_profile(self.player)
 
         # unpack all fields
         self.holes = self.profile['config'].get('holes')
@@ -423,10 +428,10 @@ class GameWindow(tk.Toplevel):
             if game_round % 2 != 0:
                 rd_number = int((game_round / 2) + 1)
                 numb = tk.Label(column_round, text=f'{rd_number:02}', bg=board_colour)
-                numb.grid(column=0, row=row, pady=1)
+                numb.grid(column=0, row=row, pady=1, padx=1)
             else:
                 empty = tk.Label(column_round, text='00', fg=board_colour, bg=board_colour)
-                empty.grid(column=0, row=row, pady=1)
+                empty.grid(column=0, row=row, pady=1, padx=1)
 
     # main game loop
     def main(self):
@@ -449,44 +454,51 @@ class GameWindow(tk.Toplevel):
         logging.critical(f'SECRET CODE = {self.secret}')
 
     def left_frame_window(self):
+        show_scrollbar = False
         # board's left side (secret code, answer and game state)
-        self.left_frame = tk.Frame(self, bg=board_colour)
+        self.left_frame = tk.Frame(self)
         self.left_frame.pack(side='left', expand=1, fill='both')
 
         # secret code frame
-        secret_frame = tk.Frame(self.left_frame, bg=board_colour)
+        secret_frame = tk.Frame(self.left_frame, bg='black')
         secret_frame.pack(side='top', anchor='e', expand=1, fill='both')
-        zero_secret = tk.Label(secret_frame, text='00', fg=board_colour, bg=board_colour)
+        zero_secret = tk.Label(secret_frame, text='00', fg='black', bg='black')
         zero_secret.grid(column=0, row=0, padx=1, pady=1)
 
         # print pc code
         for n in range(self.holes):
-            label = tk.Label(secret_frame, text='', fg='black', bg='#2c2c30')
-            label.grid(column=(n + 1), row=0, padx=1, pady=1, ipadx=38)
+            label = tk.Label(secret_frame, text='', fg='black', bg='#2c2c30', width=11)
+            label.grid(column=(n + 1), row=0, padx=1, pady=1)
 
         # get how much height canvas need
         total_height = self.get_total_height()
         self.unit.destroy()
         screen = self.winfo_screenheight()  # get screen height in pixel
         if total_height > int((screen * 3) / 4):
+            show_scrollbar = True
             total_height = int((screen * 3) / 4)
 
         self.board_canvas = tk.Canvas(self.left_frame, bg=board_colour)
         secret_frame.update()
         extension = secret_frame.winfo_width()
 
-        self.board_canvas.configure(width=extension, height=total_height)
-        self.board_canvas.update()
-        self.board_canvas.pack(expand=0, fill='y')
+        if show_scrollbar:
+            self.board_canvas.configure(width=extension, height=total_height)
+            self.board_canvas.update()
+            self.board_canvas.pack(expand=0, fill='y')
 
-        scrollbar = tk.Scrollbar(self, command=self.board_canvas.yview)
-        scrollbar.pack(side='left', fill='y')
+            scrollbar = tk.Scrollbar(self, command=self.board_canvas.yview)
+            scrollbar.pack(side='left', fill='y')
+            self.board_canvas.configure(yscrollcommand=scrollbar.set)
 
-        self.board_canvas.configure(yscrollcommand=scrollbar.set)
+            # update scrollregion after starting 'mainloop'
+            # when all widgets are in canvas
+            self.board_canvas.bind('<Configure>', self.on_configure)
 
-        # update scrollregion after starting 'mainloop'
-        # when all widgets are in canvas
-        self.board_canvas.bind('<Configure>', self.on_configure)
+        else:
+            self.board_canvas.configure(width=(extension - 2), height=(total_height - 2))
+            self.board_canvas.update()
+            self.board_canvas.pack(expand=0, fill='y')
 
         self.frame_inside_canvas = tk.Frame(self.board_canvas, bg=board_colour)
         self.board_canvas.create_window((0, 0), window=self.frame_inside_canvas, anchor='nw')
@@ -496,14 +508,14 @@ class GameWindow(tk.Toplevel):
         self.print_save_board()
 
         # answer frame
-        player_frame = tk.Frame(self.left_frame, bg=board_colour)
+        player_frame = tk.Frame(self.left_frame, bg='black')
         player_frame.pack(side='bottom', anchor='s', expand=1, fill='both')
-        zero_player = tk.Label(player_frame, text='00', fg=board_colour, bg=board_colour)
+        zero_player = tk.Label(player_frame, text='00', fg='black', bg='black')
         zero_player.grid(column=0, row=0, padx=1)
 
         for n in range(self.holes):
             combo = ttk.Combobox(player_frame, width=10, values=self.colours, state="readonly")
-            combo.grid(column=(n + 1), row=0)
+            combo.grid(column=(n + 1), row=0, padx=1)
             combo.bind("<<ComboboxSelected>>", lambda event, i=n: self.choice_sel(event, i))
 
     # update scrollregion after starting 'mainloop'
@@ -616,19 +628,16 @@ class GameWindow(tk.Toplevel):
             self.profile['statistics'][self.dif]['wins'] += 1
             if self.profile['statistics'][self.dif].get('fastest') > (self.round - 1):
                 self.profile['statistics'][self.dif]['fastest'] = (self.round - 1)
-            with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as overwrite:
-                json.dump(self.profile, overwrite)
             self.after_game()
 
         elif self.round > self.rounds:
             messagebox.showinfo('Sorry!', f"You lose. I was thinking in:\n{self.secret}")
             self.profile['statistics'][self.dif]['loses'] += 1
-            with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as overwrite:
-                json.dump(self.profile, overwrite)
             self.after_game()
 
     # after game, clean and reset fields, call main again
     def after_game(self):
+        save_profile(self.profile, self.player)
         self.game_number += 1
         self.round = 1
         self.game.clear()  # clean game state
@@ -658,8 +667,8 @@ class GameWindow(tk.Toplevel):
                         tag_colour = None
                     if tag_colour is None:
                         tag_colour = board_colour
-                    player_result = tk.Label(self.center_frame, bg=tag_colour)
-                    player_result.grid(column=peg, row=row, padx=1, pady=1, ipadx=38)
+                    player_result = tk.Label(self.center_frame, bg=tag_colour, width=11)
+                    player_result.grid(column=peg, row=row, padx=1, pady=1)
             elif game_round % 2 == 0:  # result
                 for peg in range(self.holes):
                     try:
@@ -668,8 +677,8 @@ class GameWindow(tk.Toplevel):
                         tag_colour = None
                     if tag_colour is None:
                         tag_colour = board_colour
-                    player_result = tk.Label(self.center_frame, bg=tag_colour)
-                    player_result.grid(column=peg, row=row, padx=1, pady=1, ipadx=38)
+                    player_result = tk.Label(self.center_frame, bg=tag_colour, width=11)
+                    player_result.grid(column=peg, row=row, padx=1, pady=1)
 
     # close window and call MainWindow again
     def close(self):
@@ -683,16 +692,25 @@ class GameWindow(tk.Toplevel):
         self.profile['continue']['bool'] = True
         self.profile['continue']['game_number'] = self.game_number
         self.profile['continue']['game'] = self.game
-        with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as overwrite:
-            json.dump(self.profile, overwrite)
+        save_profile(self.profile, self.player)
 
 
 def reset_continue_mode(profile, player):
     profile['continue']['bool'] = False
     profile['continue']['game_number'] = 1
     profile['continue']['game'].clear()
+    save_profile(profile, player)
+
+
+def save_profile(profile, player):
     with pathlib.Path(f'profiles\\{player}.txt').open('w') as overwrite:
         json.dump(profile, overwrite)
+
+
+def read_profile(player):
+    with pathlib.Path(f'profiles\\{player}.txt').open('r') as read:
+        profile = json.load(read)
+    return profile
 
 
 if __name__ == '__main__':
