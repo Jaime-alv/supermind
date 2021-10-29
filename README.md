@@ -13,8 +13,13 @@ Once placed, the script, as the code maker, provides feedback by placing  colour
 A black key tag is placed for each code tag from the guess which is correct in both color and position. A white key tag
 indicates the existence of a correct color code tag placed in the wrong position.
 
+- Classic mode:
 If there are duplicate colours in the guess, they cannot all be awarded a key tag unless they correspond to the same 
 number of duplicate colours in the hidden code.
+
+- Extra hard mode:
+Duplicate colours don't count towards code limit. If secret code contains two of the same colour, and you place four
+of that colour, two of them will be black, and two will be white.
 
 Once feedback is provided, another guess is made; guesses and feedback continue to alternate until either the codebreaker 
 guesses correctly, or all rows of the decoding boards are full.
