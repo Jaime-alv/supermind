@@ -19,9 +19,10 @@
 # ==========================================================================
 import pathlib
 import random
-import tkinter as tk
+import string
 import json
 import re
+import tkinter as tk
 from tkinter import messagebox
 from tkinter import ttk
 import logging
@@ -102,21 +103,34 @@ class MainWindow(tk.Tk):
         label = tk.Label(self.new_profile_window, text='Enter your name:')
         label.pack()
         self.user_name = tk.StringVar()
-        name_entry = tk.Entry(self.new_profile_window, textvariable=self.user_name)
-        name_entry.pack()
-        name_entry.focus()
-        submit = tk.Button(self.new_profile_window, text='Submit', command=self.create_json)
+        self.name_entry = tk.Entry(self.new_profile_window, textvariable=self.user_name)
+        self.name_entry.pack()
+        self.name_entry.focus()
+        submit = tk.Button(self.new_profile_window, text='Submit', command=self.validate_name)
         submit.pack()
 
-    def create_json(self):
+    def validate_name(self):
         user = self.user_name.get()
-        # todo: validate name
-        validate = re.compile(r'[A-Za-z._-]')
-        mo = validate.search(user)
+        self.create_profile_list()
+        valid_characters = string.ascii_letters + string.digits + "_-."
+        if all(c in valid_characters for c in user):
+            self.player = user
+            self.create_json()
+        else:
+            if user == '':
+                messagebox.showerror('Error!', "Name can't be empty!")
+            elif user in self.profile_list:
+                messagebox.showerror('Error!', "There is another user with that name!")
+            else:
+                messagebox.showerror('Error!', "Please, only valid characters!")
+            self.user_name.set('')
+            self.name_entry.focus()
+
+    def create_json(self):
         stat = {'wins': 0,
                 'loses': 0,
                 'fastest': 100}
-        data = {'name': user,
+        data = {'name': self.player,
                 'config': {
                     'difficulty': '',
                     'colours': 0,
@@ -136,16 +150,12 @@ class MainWindow(tk.Tk):
             data['statistics'][dif] = new_stats
         if not pathlib.Path('profiles').exists():
             pathlib.Path('profiles').mkdir(exist_ok=True)
-        if user != '':
-            save_profile(data, user)
-            self.new_profile_window.destroy()
+        save_profile(data, self.player)
+        self.new_profile_window.destroy()
 
-            # set player to new user and ask for a new game
-            self.player = user
-            self.profile = read_profile(self.player)
-            self.select_difficult()
-        else:
-            messagebox.showerror('Error!', "Name can't be empty!")
+        # set player to new user and ask for a new game
+        self.profile = read_profile(self.player)
+        self.select_difficult()
 
     # load an existing profile
     def load_profile(self):
