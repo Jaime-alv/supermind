@@ -223,7 +223,7 @@ class MainWindow(tk.Tk):
             easy = tk.Button(four_buttons, text='Easy', command=self.easy)
             easy.grid(column=0, row=0)
             # normal (6 colours, 4 holes)
-            normal = tk.Button(four_buttons, text='normal', command=self.normal)
+            normal = tk.Button(four_buttons, text='Normal', command=self.normal)
             normal.grid(column=0, row=1)
             # hard (8 colours, 5 holes)
             hard = tk.Button(four_buttons, text='Hard', command=self.hard)
