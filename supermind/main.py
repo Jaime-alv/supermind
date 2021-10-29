@@ -136,8 +136,7 @@ class MainWindow(tk.Tk):
         if not pathlib.Path('profiles').exists():
             pathlib.Path('profiles').mkdir(exist_ok=True)
         if user != '':
-            with pathlib.Path(f'profiles\\{user}.txt').open('w') as file:
-                json.dump(data, file)
+            save_profile(data, user)
             self.new_profile_window.destroy()
 
             # set player to new user and ask for a new game
@@ -238,8 +237,7 @@ class MainWindow(tk.Tk):
         if games.isdigit() and int(games) > 0:
             self.profile['config'] = dif
             self.profile['config']['games'] = int(games)
-            with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as file:
-                json.dump(self.profile, file)
+            save_profile(self.profile, self.player)
             self.game_window()
         else:
             messagebox.showerror('Error!', 'Number of games should be higher than 0!')
@@ -623,19 +621,16 @@ class GameWindow(tk.Toplevel):
             self.profile['statistics'][self.dif]['wins'] += 1
             if self.profile['statistics'][self.dif].get('fastest') > (self.round - 1):
                 self.profile['statistics'][self.dif]['fastest'] = (self.round - 1)
-            with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as overwrite:
-                json.dump(self.profile, overwrite)
             self.after_game()
 
         elif self.round > self.rounds:
             messagebox.showinfo('Sorry!', f"You lose. I was thinking in:\n{self.secret}")
             self.profile['statistics'][self.dif]['loses'] += 1
-            with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as overwrite:
-                json.dump(self.profile, overwrite)
             self.after_game()
 
     # after game, clean and reset fields, call main again
     def after_game(self):
+        save_profile(self.profile, self.player)
         self.game_number += 1
         self.round = 1
         self.game.clear()  # clean game state
@@ -690,16 +685,14 @@ class GameWindow(tk.Toplevel):
         self.profile['continue']['bool'] = True
         self.profile['continue']['game_number'] = self.game_number
         self.profile['continue']['game'] = self.game
-        with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as overwrite:
-            json.dump(self.profile, overwrite)
+        save_profile(self.profile, self.player)
 
 
 def reset_continue_mode(profile, player):
     profile['continue']['bool'] = False
     profile['continue']['game_number'] = 1
     profile['continue']['game'].clear()
-    with pathlib.Path(f'profiles\\{player}.txt').open('w') as overwrite:
-        json.dump(profile, overwrite)
+    save_profile(profile, player)
 
 
 def save_profile(profile, player):
