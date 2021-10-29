@@ -1,6 +1,8 @@
 # Supermind
  Classic colour code-breaking game.
 
+The script is entirely written in Python, and only using standard libraries for the added challenge.
+
 # Work In Progress
 
 **Game is not ready, I'm still working on it!**
@@ -13,8 +15,13 @@ Once placed, the script, as the code maker, provides feedback by placing  colour
 A black key tag is placed for each code tag from the guess which is correct in both color and position. A white key tag
 indicates the existence of a correct color code tag placed in the wrong position.
 
+- Classic mode:
 If there are duplicate colours in the guess, they cannot all be awarded a key tag unless they correspond to the same 
 number of duplicate colours in the hidden code.
+
+- Extra hard mode:
+Duplicate colours don't count towards code limit. If secret code contains two of the same colour, and you place four
+of that colour, two of them will be black, and two will be white.
 
 Once feedback is provided, another guess is made; guesses and feedback continue to alternate until either the codebreaker 
 guesses correctly, or all rows of the decoding boards are full.
@@ -48,7 +55,7 @@ and custom.
    - Easy: 6 different colours, 3 holes and 12 rounds.
    - Normal: 6 different colours, 4 holes and 12 rounds.
    - Hard: 8 different colours, 5 holes and 14 rounds.
-   - Custom: you can customize your experience here with: Up to 8 different colours; up to 10 holes; up to 100 rounds 
+   - Custom: you can customize your experience here with: Up to 8 different colours; up to 10 holes; up to 50 rounds 
    in each game.
 
 ## Board Window
@@ -63,7 +70,7 @@ On the right side, you can see:
 - Game counter: current game you're playing.
 - Round counter: current round you're about to submit.
 - Submit button: for submitting your code.
-- Close: Close this window and take you to the main window.
+- Close: Close this window and take you to the main window, the game will save its state, so you can continue it later.
 
 ###### Copyright (C) 2021 Jaime Alvarez Fernandez
 
