@@ -3,6 +3,8 @@
 
 The script is entirely written in Python, and only using standard libraries for the added challenge.
 
+The script is entirely written in Python, and using only standard libraries for the added challenge.
+
 # Work In Progress
 
 **Game is not ready, I'm still working on it!**
