@@ -136,12 +136,14 @@ class MainWindow(tk.Tk):
         if not pathlib.Path('profiles').exists():
             pathlib.Path('profiles').mkdir(exist_ok=True)
         if user != '':
-            save_profile(data, user)
+            with pathlib.Path(f'profiles\\{user}.txt').open('w') as file:
+                json.dump(data, file)
             self.new_profile_window.destroy()
 
             # set player to new user and ask for a new game
             self.player = user
-            self.profile = read_profile(self.player)
+            with pathlib.Path(f'profiles\\{user}.txt').open('r') as file:
+                self.profile = json.load(file)
             self.select_difficult()
         else:
             messagebox.showerror('Error!', "Name can't be empty!")
@@ -163,7 +165,8 @@ class MainWindow(tk.Tk):
 
     def load_this(self, name):
         self.player = name
-        self.profile = read_profile(self.player)
+        with pathlib.Path(f'profiles\\{name}.txt').open('r') as file:
+            self.profile = json.load(file)
         if self.profile['continue'].get('bool', None):
             message = 'There is a game going.\nWould you like to continue it?'
             if messagebox.askyesno('Continue', message=message):
@@ -235,7 +238,8 @@ class MainWindow(tk.Tk):
         if games.isdigit() and int(games) > 0:
             self.profile['config'] = dif
             self.profile['config']['games'] = int(games)
-            save_profile(self.profile, self.player)
+            with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as file:
+                json.dump(self.profile, file)
             self.game_window()
         else:
             messagebox.showerror('Error!', 'Number of games should be higher than 0!')
@@ -298,8 +302,8 @@ class MainWindow(tk.Tk):
     # show profile statistics
     def show_profile(self):
         if self.player != '':
-            player_profile = read_profile(self.player)
-
+            with pathlib.Path(f'profiles\\{self.player}.txt').open('r') as read:
+                profile = json.load(read)
             # create new window
             profile_window = tk.Toplevel()
             profile_window.title(self.player)
@@ -308,22 +312,22 @@ class MainWindow(tk.Tk):
             # statistics for easy difficulty
             easy_frame = tk.Frame(profile_window)
             easy_frame.pack(anchor='w')
-            self.profile_unpack(easy_frame, player_profile['statistics']['easy'], 'Easy')
+            self.profile_unpack(easy_frame, profile['statistics']['easy'], 'Easy')
 
             # statistics for normal difficulty
             normal_frame = tk.Frame(profile_window)
             normal_frame.pack(anchor='w')
-            self.profile_unpack(normal_frame, player_profile['statistics']['normal'], 'Normal')
+            self.profile_unpack(normal_frame, profile['statistics']['normal'], 'Normal')
 
             # statistics for hard difficulty
             hard_frame = tk.Frame(profile_window)
             hard_frame.pack(anchor='w')
-            self.profile_unpack(hard_frame, player_profile['statistics']['hard'], 'Hard')
+            self.profile_unpack(hard_frame, profile['statistics']['hard'], 'Hard')
 
             # statistics for custom difficulty
             custom_frame = tk.Frame(profile_window)
             custom_frame.pack(anchor='w')
-            self.profile_unpack(custom_frame, player_profile['statistics']['custom'], 'Custom')
+            self.profile_unpack(custom_frame, profile['statistics']['custom'], 'Custom')
 
         else:
             messagebox.showerror('Error!', 'Select a profile first!')
@@ -370,7 +374,8 @@ class GameWindow(tk.Toplevel):
         self.master = master
         self.title('Supermind')
         self.resizable(False, False)
-        self.profile = read_profile(self.player)
+        with pathlib.Path(f'profiles\\{self.player}.txt').open('r') as read:
+            self.profile = json.load(read)
 
         # unpack all fields
         self.holes = self.profile['config'].get('holes')
@@ -618,13 +623,16 @@ class GameWindow(tk.Toplevel):
             self.profile['statistics'][self.dif]['wins'] += 1
             if self.profile['statistics'][self.dif].get('fastest') > (self.round - 1):
                 self.profile['statistics'][self.dif]['fastest'] = (self.round - 1)
+            with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as overwrite:
+                json.dump(self.profile, overwrite)
+            self.after_game()
 
         elif self.round > self.rounds:
             messagebox.showinfo('Sorry!', f"You lose. I was thinking in:\n{self.secret}")
             self.profile['statistics'][self.dif]['loses'] += 1
-
-        save_profile(self.profile, self.player)
-        self.after_game()
+            with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as overwrite:
+                json.dump(self.profile, overwrite)
+            self.after_game()
 
     # after game, clean and reset fields, call main again
     def after_game(self):
@@ -682,25 +690,21 @@ class GameWindow(tk.Toplevel):
         self.profile['continue']['bool'] = True
         self.profile['continue']['game_number'] = self.game_number
         self.profile['continue']['game'] = self.game
-        save_profile(self.profile, self.player)
+        with pathlib.Path(f'profiles\\{self.player}.txt').open('w') as overwrite:
+            json.dump(self.profile, overwrite)
 
 
 def reset_continue_mode(profile, player):
     profile['continue']['bool'] = False
     profile['continue']['game_number'] = 1
     profile['continue']['game'].clear()
-    save_profile(profile, player)
+    with pathlib.Path(f'profiles\\{player}.txt').open('w') as overwrite:
+        json.dump(profile, overwrite)
 
 
 def save_profile(profile, player):
     with pathlib.Path(f'profiles\\{player}.txt').open('w') as overwrite:
         json.dump(profile, overwrite)
-
-
-def read_profile(player):
-    with pathlib.Path(f'profiles\\{player}.txt').open('r') as read:
-        profile = json.load(read)
-    return profile
 
 
 if __name__ == '__main__':
