@@ -136,7 +136,8 @@ class MainWindow(tk.Tk):
                     'colours': 0,
                     'holes': 0,
                     'rounds': 0,
-                    'games': 0},
+                    'games': 0,
+                    'extra_hard': False},
                 'continue': {'bool': False,
                              'game_number': 0,
                              'game': {}},
@@ -214,6 +215,8 @@ class MainWindow(tk.Tk):
             # divided in 2 frames; left for normal modes, right for custom
             left_frame = tk.Frame(self.select_difficult_window)
             left_frame.pack(side='left')
+            choose_label = tk.Label(left_frame, text='Choose a difficulty')
+            choose_label.pack()
             four_buttons = tk.Frame(left_frame)
             four_buttons.pack()
             # easy (6 colours, 3 holes)
@@ -228,6 +231,11 @@ class MainWindow(tk.Tk):
             # custom (up to 8 colours, up to 8 holes?)
             custom = tk.Button(four_buttons, text='Custom', command=self.custom_frame)
             custom.grid(column=1, row=1)
+            # extra hard?
+            self.check_extra = tk.BooleanVar()
+            extra = tk.Checkbutton(left_frame, text='Extra hard?', variable=self.check_extra)
+            extra.pack()
+
             # ask for number of games
             games_label = tk.Label(left_frame, text="How many games will be playing?")
             games_label.pack()
@@ -245,6 +253,7 @@ class MainWindow(tk.Tk):
         games = self.games.get()
         if games.isdigit() and int(games) > 0:
             self.profile['config'] = dif
+            self.profile['config']['extra_hard'] = self.check_extra.get()
             self.profile['config']['games'] = int(games)
             save_profile(self.profile, self.player)
             self.game_window()
@@ -387,6 +396,7 @@ class GameWindow(tk.Toplevel):
         self.rounds = self.profile['config'].get('rounds')
         self.games = self.profile['config'].get('games')
         self.dif = self.profile['config'].get('difficulty')
+        self.extra_hard = self.profile['config'].get('extra_hard')
 
         self.colour_dict = {}  # place for storing player choice until hit 'submit'
         self.colours = []  # available colours for the current game
@@ -581,33 +591,17 @@ class GameWindow(tk.Toplevel):
     # compare player against secret code
     def compare_player(self):
         logging.info(f'Player choice in round {self.round} = {self.colour_dict}')
-        results = []  # Result from comparing player against secret code: black, white or None
         choice = {}  # Player choice in dict form for saving game estate
         for key in self.colour_dict:
             choice.setdefault(str(key), self.colour_dict.get(key))
         # now I need a list for counting items, if player puts 2 of the same colour and secret has only one, only one
         # peg in result should be displayed
-        secret = list(self.secret)  # Need a new list I can modify for already used colours.
-        results_dict = {}
-        for c in self.colour_dict:
-            if self.colour_dict.get(c) == secret[int(c)]:
-                results_dict.setdefault(str(c), 'black')
-                results.append('black')
-                secret[int(c)] = 'used'
-            else:
-                results.append('wrong')
-        for c in self.colour_dict:
-            if results[int(c)] == 'wrong':
-                if self.colour_dict.get(c) in secret:
-                    results[int(c)] = 'white'
-                    results_dict.setdefault(str(c), 'white')
-                    for x in range(len(secret)):
-                        if self.colour_dict.get(c) == secret[x]:
-                            secret[x] = 'used'
-                            break
-                else:
-                    results[int(c)] = None
-                    results_dict.setdefault(str(c), None)
+        if self.extra_hard:
+            results_dict = self.extra_hard_mode()
+        else:
+            results_dict = self.classic_mode()
+
+        results = [results_dict.get(c) for c in results_dict]
 
         # save game state
         self.game['player'].setdefault(str(self.round), {})
@@ -634,6 +628,44 @@ class GameWindow(tk.Toplevel):
             messagebox.showinfo('Sorry!', f"You lose. I was thinking in:\n{self.secret}")
             self.profile['statistics'][self.dif]['loses'] += 1
             self.after_game()
+
+    # extra hard option
+    def extra_hard_mode(self):
+        results_dict = {}
+        for c in self.colour_dict:
+            if self.colour_dict.get(c) == self.secret[int(c)]:
+                results_dict.setdefault(str(c), 'black')
+            elif self.colour_dict.get(c) in self.secret:
+                results_dict.setdefault(str(c), 'white')
+            else:
+                results_dict.setdefault(str(c), None)
+        return results_dict
+
+    # classic mode
+    def classic_mode(self):
+        results = []  # Result from comparing player against secret code: black, white or None
+        secret = list(self.secret)  # Need a new list I can modify for already used colours.
+        results_dict = {}
+        for c in self.colour_dict:
+            if self.colour_dict.get(c) == secret[int(c)]:
+                results_dict.setdefault(str(c), 'black')
+                results.append('black')
+                secret[int(c)] = 'used'
+            else:
+                results.append('wrong')
+        for c in self.colour_dict:
+            if results[int(c)] == 'wrong':
+                if self.colour_dict.get(c) in secret:
+                    results[int(c)] = 'white'
+                    results_dict.setdefault(str(c), 'white')
+                    for x in range(len(secret)):
+                        if self.colour_dict.get(c) == secret[x]:
+                            secret[x] = 'used'
+                            break
+                else:
+                    results[int(c)] = None
+                    results_dict.setdefault(str(c), None)
+        return results_dict
 
     # after game, clean and reset fields, call main again
     def after_game(self):
