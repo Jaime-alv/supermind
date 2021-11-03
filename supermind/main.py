@@ -135,12 +135,12 @@ class MainWindow(tk.Tk):
                     'difficulty': '',
                     'colours': 0,
                     'holes': 0,
-                    'rounds': 0,
-                    'games': 0,
+                    'total_rounds': 0,
+                    'total_games': 0,
                     'extra_hard': False},
                 'continue': {'bool': False,
                              'game_number': 0,
-                             'game': {}},
+                             'current_game': {}},
                 'statistics': {'easy': {},
                                'normal': {},
                                'hard': {},
@@ -240,8 +240,8 @@ class MainWindow(tk.Tk):
             extra_hard = tk.Radiobutton(left_frame, text='Extra hard mode', value=True, variable=self.game_mode)
             extra_hard.pack(anchor='w')
 
-            # ask for number of games
-            games_label = tk.Label(left_frame, text="How many games will be playing?")
+            # ask for number of total_games
+            games_label = tk.Label(left_frame, text="How many total_games will be playing?")
             games_label.pack()
             self.games = tk.StringVar()
             self.games.set('3')
@@ -258,24 +258,24 @@ class MainWindow(tk.Tk):
         if games.isdigit() and int(games) > 0:
             self.profile['config'] = dif
             self.profile['config']['extra_hard'] = self.game_mode.get()
-            self.profile['config']['games'] = int(games)
+            self.profile['config']['total_games'] = int(games)
             save_profile(self.profile, self.player)
             self.game_window()
         else:
-            messagebox.showerror('Error!', 'Number of games should be higher than 0!')
+            messagebox.showerror('Error!', 'Number of total_games should be higher than 0!')
             self.select_difficult()
 
     # easy
     def easy(self):
-        self.difficulty({'difficulty': 'easy', 'colours': 6, 'holes': 3, 'rounds': 12})
+        self.difficulty({'difficulty': 'easy', 'colours': 6, 'holes': 3, 'total_rounds': 12})
 
     # normal
     def normal(self):
-        self.difficulty({'difficulty': 'normal', 'colours': 6, 'holes': 4, 'rounds': 12})
+        self.difficulty({'difficulty': 'normal', 'colours': 6, 'holes': 4, 'total_rounds': 12})
 
     # hard
     def hard(self):
-        self.difficulty({'difficulty': 'hard', 'colours': 8, 'holes': 5, 'rounds': 14})
+        self.difficulty({'difficulty': 'hard', 'colours': 8, 'holes': 5, 'total_rounds': 14})
 
     # custom mode (create new window for inputting values)
     def custom_frame(self):
@@ -298,8 +298,8 @@ class MainWindow(tk.Tk):
         self.holes.set(5)
         holes_spin = tk.Spinbox(questions_frame, from_=1, to=10, width=3, textvariable=self.holes)
         holes_spin.grid(column=1, row=1)
-        # how many rounds
-        rounds_ask = tk.Label(questions_frame, text='How many rounds?')
+        # how many total_rounds
+        rounds_ask = tk.Label(questions_frame, text='How many total_rounds?')
         rounds_ask.grid(column=0, row=2)
         self.rounds = tk.IntVar()
         self.rounds.set(15)
@@ -315,7 +315,7 @@ class MainWindow(tk.Tk):
             colours = self.colours.get()
             holes = self.holes.get()
             rounds = self.rounds.get()
-            self.difficulty({'difficulty': 'custom', 'colours': colours, 'holes': holes, 'rounds': rounds})
+            self.difficulty({'difficulty': 'custom', 'colours': colours, 'holes': holes, 'total_rounds': rounds})
         else:
             messagebox.showerror('Error!', 'Please, enter valid inputs!')
 
@@ -369,7 +369,7 @@ class MainWindow(tk.Tk):
             win_loss = tk.Label(where, text=f'    ·Win/Loss ratio: {win_loss_ratio}%')
             win_loss.grid(column=0, row=4, sticky='w')
             fastet_game = profile.get('fastest')
-            fastest = tk.Label(where, text=f'    ·Fastest win in: {fastet_game} rounds')
+            fastest = tk.Label(where, text=f'    ·Shortest game: {fastet_game} rounds')
             fastest.grid(column=0, row=5, sticky='w')
         else:
             nothing = tk.Label(where, text='    ·No data.')
@@ -397,35 +397,37 @@ class GameWindow(tk.Toplevel):
 
         # unpack all fields
         self.holes = self.profile['config'].get('holes')
-        self.rounds = self.profile['config'].get('rounds')
-        self.games = self.profile['config'].get('games')
-        self.dif = self.profile['config'].get('difficulty')
+        self.total_rounds = self.profile['config'].get('total_rounds')
+        self.total_games = self.profile['config'].get('total_games')
+        self.difficulty = self.profile['config'].get('difficulty')
         self.extra_hard = self.profile['config'].get('extra_hard')
 
         self.player_choice = {}  # place for storing player choice until hit 'submit'
-        self.colours = []  # available colours for the current game
+        self.available_colours = []  # available colours for the current game
 
         # check for saved game
         if not self.profile['continue'].get('bool'):
-            self.game = {}  # dict for saving game state and all player choices
-            self.secret = []  # secret color code player needs to get
+            self.current_game = {}  # dict for saving game state and all player choices
+            self.secret_code = []  # secret color code player needs to get
             self.round = 1  # Current round
             self.game_number = 1  # Current game
         else:
-            self.game = self.profile['continue'].get('game')
-            self.secret = self.profile['continue']['game']['pc']
+            self.current_game = self.profile['continue'].get('current_game')
+            self.secret_code = self.profile['continue']['current_game']['pc']
             self.game_number = self.profile['continue'].get('game_number')
-            self.round = len(self.profile['continue']['game']['player']) + 1
+            self.round = len(self.profile['continue']['current_game']['player']) + 1
 
         self.set_up()
+        if self.round >= self.total_rounds:
+            self.after_game()
         self.main()
 
-    # set up and configure games
+    # set up and configure total_games
     def set_up(self):
-        colour_list = ['red', 'blue', 'green', 'yellow', 'orange', 'indigo', 'violet', 'white']
+        rainbow_colour = ['red', 'blue', 'green', 'yellow', 'orange', 'indigo', 'violet', 'white']
         for n in range(self.profile['config'].get('colours')):
-            self.colours.append(colour_list[n])
-        logging.debug(self.colours)
+            self.available_colours.append(rainbow_colour[n])
+        logging.debug(self.available_colours)
         # create dict with n colours for storing player choice
         for n in range(self.holes):
             self.player_choice.setdefault(n, '')
@@ -437,8 +439,8 @@ class GameWindow(tk.Toplevel):
     def column_round_counter(self):
         column_round = tk.Frame(self.frame_inside_canvas, bg='black')
         column_round.pack(side='left')
-        for game_round in range(1, (self.rounds * 2) + 1):
-            row = ((self.rounds * 2) + 1) - game_round
+        for game_round in range(1, (self.total_rounds * 2) + 1):
+            row = ((self.total_rounds * 2) + 1) - game_round
             if game_round % 2 != 0:
                 rd_number = int((game_round / 2) + 1)
                 numb = tk.Label(column_round, text=f'{rd_number:02}', bg=board_colour)
@@ -449,7 +451,7 @@ class GameWindow(tk.Toplevel):
 
     # main game loop
     def main(self):
-        if self.game_number <= self.games:
+        if self.game_number <= self.total_games:
             self.select_colours()
         else:
             # game is over, time to reset 'continue'
@@ -460,12 +462,12 @@ class GameWindow(tk.Toplevel):
     # read number of colours game is going to use, and append to a list
     # randomize colours and get secret code
     def select_colours(self):
-        while len(self.secret) < self.holes:
-            colour = random.choice(self.colours)
-            self.secret.append(colour)
-        self.game.setdefault('pc', self.secret)  # save game estate
-        self.game.setdefault('player', {})
-        logging.critical(f'SECRET CODE = {self.secret}')
+        while len(self.secret_code) < self.holes:
+            colour = random.choice(self.available_colours)
+            self.secret_code.append(colour)
+        self.current_game.setdefault('pc', self.secret_code)  # save game estate
+        self.current_game.setdefault('player', {})
+        logging.critical(f'SECRET CODE = {self.secret_code}')
 
     # hide secret code
     def hide_secret(self):
@@ -484,8 +486,8 @@ class GameWindow(tk.Toplevel):
         self.uncover_frame = tk.Frame(self.top_frame, bg='black')
         self.uncover_frame.pack(side='right')
 
-        for n in range(len(self.secret)):
-            label = tk.Label(self.uncover_frame, text='', fg='black', bg=self.secret[n], width=11)
+        for n in range(len(self.secret_code)):
+            label = tk.Label(self.uncover_frame, text='', fg='black', bg=self.secret_code[n], width=11)
             label.grid(column=(n + 1), row=0, padx=1, pady=1)
 
     def left_frame_window(self):
@@ -534,7 +536,7 @@ class GameWindow(tk.Toplevel):
         self.frame_inside_canvas = tk.Frame(self.board_canvas, bg=board_colour)
         self.board_canvas.create_window((0, 0), window=self.frame_inside_canvas, anchor='nw')
 
-        # rounds frame (center frame with all player solutions)
+        # total_rounds frame (center frame with all player solutions)
         self.column_round_counter()
         self.print_save_board()
 
@@ -545,7 +547,7 @@ class GameWindow(tk.Toplevel):
         zero_player.grid(column=0, row=0, padx=1)
 
         for n in range(self.holes):
-            combo = ttk.Combobox(player_frame, width=10, values=self.colours, state="readonly")
+            combo = ttk.Combobox(player_frame, width=10, values=self.available_colours, state="readonly")
             combo.grid(column=(n + 1), row=0, padx=1)
             combo.bind("<<ComboboxSelected>>", lambda event, i=n: self.choice_sel(event, i))
 
@@ -557,7 +559,7 @@ class GameWindow(tk.Toplevel):
     def get_total_height(self):
         self.unit = tk.Frame(self.left_frame)
         self.unit.pack()
-        for game_round in range(self.rounds * 2):
+        for game_round in range(self.total_rounds * 2):
             row = tk.Label(self.unit)
             row.grid(column=0, row=game_round, pady=1)
         self.unit.update()
@@ -623,9 +625,9 @@ class GameWindow(tk.Toplevel):
             results = self.classic_mode()
 
         # save game state
-        self.game['player'].setdefault(str(self.round), {})
-        self.game['player'][str(self.round)].setdefault('choice', choice)
-        self.game['player'][str(self.round)].setdefault('result', results)
+        self.current_game['player'].setdefault(str(self.round), {})
+        self.current_game['player'][str(self.round)].setdefault('choice', choice)
+        self.current_game['player'][str(self.round)].setdefault('result', results)
 
         # add one more round to counter
         self.round += 1
@@ -633,30 +635,30 @@ class GameWindow(tk.Toplevel):
         self.center_frame.destroy()
         self.print_save_board()
         logging.warning(f'Result = {results}')
-        logging.critical(self.game)
+        logging.critical(self.current_game)
 
         # win or lose condition
         if all(results.get(c) == 'black' for c in results):
             self.uncover_secret()
             messagebox.showinfo('Congratulations!', 'You win.')
-            self.profile['statistics'][self.dif]['wins'] += 1
-            if self.profile['statistics'][self.dif].get('fastest') > (self.round - 1):
-                self.profile['statistics'][self.dif]['fastest'] = (self.round - 1)
+            self.profile['statistics'][self.difficulty]['wins'] += 1
+            if self.profile['statistics'][self.difficulty].get('fastest') > (self.round - 1):
+                self.profile['statistics'][self.difficulty]['fastest'] = (self.round - 1)
             self.after_game()
 
-        elif self.round > self.rounds:
+        elif self.round > self.total_rounds:
             self.uncover_secret()
-            messagebox.showinfo('Sorry!', f"You lose. I was thinking in:\n{self.secret}")
-            self.profile['statistics'][self.dif]['loses'] += 1
+            messagebox.showinfo('Sorry!', f"You lose. I was thinking in:\n{self.secret_code}")
+            self.profile['statistics'][self.difficulty]['loses'] += 1
             self.after_game()
 
     # extra hard option
     def extra_hard_mode(self):
         results = {}
         for c in self.player_choice:
-            if self.player_choice.get(c) == self.secret[int(c)]:
+            if self.player_choice.get(c) == self.secret_code[int(c)]:
                 results.setdefault(str(c), 'black')
-            elif self.player_choice.get(c) in self.secret:
+            elif self.player_choice.get(c) in self.secret_code:
                 results.setdefault(str(c), 'white')
             else:
                 results.setdefault(str(c), None)
@@ -664,7 +666,7 @@ class GameWindow(tk.Toplevel):
 
     # classic mode
     def classic_mode(self):
-        secret = list(self.secret)  # Need a new list I can modify for already used colours.
+        secret = list(self.secret_code)  # Need a new list I can modify for already used colours.
         results = {}
         for c in self.player_choice:
             if self.player_choice.get(c) == secret[int(c)]:
@@ -689,8 +691,8 @@ class GameWindow(tk.Toplevel):
         save_profile(self.profile, self.player)
         self.game_number += 1
         self.round = 1
-        self.game.clear()  # clean game state
-        self.secret.clear()  # clear secret in a new game round
+        self.current_game.clear()  # clean game state
+        self.secret_code.clear()  # clear secret in a new game round
         self.center_frame.destroy()
         self.print_save_board()
         # update game counter
@@ -708,12 +710,12 @@ class GameWindow(tk.Toplevel):
     def print_save_board(self):
         self.center_frame = tk.Frame(self.frame_inside_canvas, bg='black')
         self.center_frame.pack()
-        for game_round in range(1, (self.rounds * 2) + 1):
-            row = ((self.rounds * 2) + 1) - game_round
+        for game_round in range(1, (self.total_rounds * 2) + 1):
+            row = ((self.total_rounds * 2) + 1) - game_round
             if game_round % 2 != 0:  # player choice
                 for peg in range(self.holes):
                     try:
-                        tag_colour = self.game['player'][str((game_round // 2) + 1)]['choice'].get(str(peg), None)
+                        tag_colour = self.current_game['player'][str((game_round // 2) + 1)]['choice'].get(str(peg), None)
                         # json file stores int as str
                     except KeyError:
                         tag_colour = None
@@ -724,7 +726,7 @@ class GameWindow(tk.Toplevel):
             elif game_round % 2 == 0:  # result
                 for peg in range(self.holes):
                     try:
-                        tag_colour = self.game['player'][str((game_round // 2))]['result'].get(str(peg), None)
+                        tag_colour = self.current_game['player'][str((game_round // 2))]['result'].get(str(peg), None)
                     except KeyError:
                         tag_colour = None
                     if tag_colour is None:
@@ -734,7 +736,7 @@ class GameWindow(tk.Toplevel):
 
     # close window and call MainWindow again
     def close(self):
-        if self.round > 1 or 1 < self.game_number <= self.games:
+        if self.round > 1 or 1 < self.game_number <= self.total_games:
             self.save_all()
         self.master.deiconify()
         self.destroy()
@@ -743,14 +745,14 @@ class GameWindow(tk.Toplevel):
     def save_all(self):
         self.profile['continue']['bool'] = True
         self.profile['continue']['game_number'] = self.game_number
-        self.profile['continue']['game'] = self.game
+        self.profile['continue']['current_game'] = self.current_game
         save_profile(self.profile, self.player)
 
 
 def reset_continue_mode(profile, player):
     profile['continue']['bool'] = False
     profile['continue']['game_number'] = 1
-    profile['continue']['game'].clear()
+    profile['continue']['current_game'].clear()
     save_profile(profile, player)
 
 
