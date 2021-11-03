@@ -450,6 +450,11 @@ class GameWindow(tk.Toplevel):
     # main game loop
     def main(self):
         if self.game_number <= self.games:
+            if self.game_number > 1:
+                self.uncover_frame.destroy()
+                self.hide_secret()
+            else:
+                self.hide_secret()
             self.select_colours()
         else:
             # game is over, time to reset 'continue'
@@ -467,6 +472,26 @@ class GameWindow(tk.Toplevel):
         self.game.setdefault('player', {})
         logging.critical(f'SECRET CODE = {self.secret}')
 
+    # hide secret code
+    def hide_secret(self):
+        self.secret_frame = tk.Frame(self.top_frame, bg='black')
+        self.secret_frame.pack(side='right')
+
+        # print pc code
+        for n in range(self.holes):
+            label = tk.Label(self.secret_frame, text='', fg='black', bg='#2c2c30', width=11)
+            label.grid(column=(n + 1), row=0, padx=1, pady=1)
+
+    # uncover secret code frame
+    def uncover_secret(self):
+        self.secret_frame.destroy()
+        self.uncover_frame = tk.Frame(self.top_frame, bg='black')
+        self.uncover_frame.pack(side='right')
+
+        for n in range(self.secret):
+            label = tk.Label(self.uncover_frame, text='', fg='black', bg=self.secret[n], width=11)
+            label.grid(column=(n + 1), row=0, padx=1, pady=1)
+
     def left_frame_window(self):
         show_scrollbar = False
         # board's left side (secret code, answer and game state)
@@ -474,15 +499,10 @@ class GameWindow(tk.Toplevel):
         self.left_frame.pack(side='left', expand=1, fill='both')
 
         # secret code frame
-        secret_frame = tk.Frame(self.left_frame, bg='black')
-        secret_frame.pack(side='top', anchor='e', expand=1, fill='both')
-        zero_secret = tk.Label(secret_frame, text='00', fg='black', bg='black')
-        zero_secret.grid(column=0, row=0, padx=1, pady=1)
-
-        # print pc code
-        for n in range(self.holes):
-            label = tk.Label(secret_frame, text='', fg='black', bg='#2c2c30', width=11)
-            label.grid(column=(n + 1), row=0, padx=1, pady=1)
+        self.top_frame = tk.Frame(self.left_frame, bg='black')
+        self.top_frame.pack(side='top', anchor='e', expand=1, fill='both')
+        zero_secret = tk.Label(self.top_frame, text='00', fg='black', bg='black')
+        zero_secret.pack(side='left')
 
         # get how much height canvas need
         total_height = self.get_total_height()
@@ -493,8 +513,8 @@ class GameWindow(tk.Toplevel):
             total_height = int((screen * 3) / 4)
 
         self.board_canvas = tk.Canvas(self.left_frame, bg=board_colour)
-        secret_frame.update()
-        extension = secret_frame.winfo_width()
+        self.top_frame.update()
+        extension = self.top_frame.winfo_width()
 
         if show_scrollbar:
             self.board_canvas.configure(width=extension, height=total_height)
@@ -601,16 +621,14 @@ class GameWindow(tk.Toplevel):
         # now I need a list for counting items, if player puts 2 of the same colour and secret has only one, only one
         # peg in result should be displayed
         if self.extra_hard:
-            results_dict = self.extra_hard_mode()
+            results = self.extra_hard_mode()
         else:
-            results_dict = self.classic_mode()
-
-        results = [results_dict.get(c) for c in results_dict]
+            results = self.classic_mode()
 
         # save game state
         self.game['player'].setdefault(str(self.round), {})
         self.game['player'][str(self.round)].setdefault('choice', choice)
-        self.game['player'][str(self.round)].setdefault('result', results_dict)
+        self.game['player'][str(self.round)].setdefault('result', results)
 
         # add one more round to counter
         self.round += 1
@@ -621,7 +639,7 @@ class GameWindow(tk.Toplevel):
         logging.critical(self.game)
 
         # win or lose condition
-        if all(c == 'black' for c in results):
+        if all(results.get(c) == 'black' for c in results):
             messagebox.showinfo('Congratulations!', 'You win.')
             self.profile['statistics'][self.dif]['wins'] += 1
             if self.profile['statistics'][self.dif].get('fastest') > (self.round - 1):
