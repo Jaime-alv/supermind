@@ -402,7 +402,7 @@ class GameWindow(tk.Toplevel):
         self.dif = self.profile['config'].get('difficulty')
         self.extra_hard = self.profile['config'].get('extra_hard')
 
-        self.colour_dict = {}  # place for storing player choice until hit 'submit'
+        self.player_choice = {}  # place for storing player choice until hit 'submit'
         self.colours = []  # available colours for the current game
 
         # check for saved game
@@ -428,8 +428,8 @@ class GameWindow(tk.Toplevel):
         logging.debug(self.colours)
         # create dict with n colours for storing player choice
         for n in range(self.holes):
-            self.colour_dict.setdefault(n, '')
-        logging.debug(self.colour_dict)
+            self.player_choice.setdefault(n, '')
+        logging.debug(self.player_choice)
         self.right_frame_window()
         self.left_frame_window()
 
@@ -600,21 +600,21 @@ class GameWindow(tk.Toplevel):
 
     # save player's choice in a dictionary so it can be checked later
     def choice_sel(self, event, i):
-        self.colour_dict[i] = event.widget.get()
+        self.player_choice[i] = event.widget.get()
 
     # form validation from submit button
     def everything_ok(self):
-        if all(self.colour_dict.get(c) != '' for c in self.colour_dict):
+        if all(self.player_choice.get(c) != '' for c in self.player_choice):
             self.compare_player()
         else:
             messagebox.showerror('Error!', 'There is an empty field.')
 
     # compare player against secret code
     def compare_player(self):
-        logging.info(f'Player choice in round {self.round} = {self.colour_dict}')
+        logging.info(f'Player choice in round {self.round} = {self.player_choice}')
         choice = {}  # Player choice in dict form for saving game estate
-        for key in self.colour_dict:
-            choice.setdefault(str(key), self.colour_dict.get(key))
+        for key in self.player_choice:
+            choice.setdefault(str(key), self.player_choice.get(key))
         # now I need a list for counting items, if player puts 2 of the same colour and secret has only one, only one
         # peg in result should be displayed
         if self.extra_hard:
@@ -652,41 +652,37 @@ class GameWindow(tk.Toplevel):
 
     # extra hard option
     def extra_hard_mode(self):
-        results_dict = {}
-        for c in self.colour_dict:
-            if self.colour_dict.get(c) == self.secret[int(c)]:
-                results_dict.setdefault(str(c), 'black')
-            elif self.colour_dict.get(c) in self.secret:
-                results_dict.setdefault(str(c), 'white')
+        results = {}
+        for c in self.player_choice:
+            if self.player_choice.get(c) == self.secret[int(c)]:
+                results.setdefault(str(c), 'black')
+            elif self.player_choice.get(c) in self.secret:
+                results.setdefault(str(c), 'white')
             else:
-                results_dict.setdefault(str(c), None)
-        return results_dict
+                results.setdefault(str(c), None)
+        return results
 
     # classic mode
     def classic_mode(self):
-        results = []  # Result from comparing player against secret code: black, white or None
         secret = list(self.secret)  # Need a new list I can modify for already used colours.
-        results_dict = {}
-        for c in self.colour_dict:
-            if self.colour_dict.get(c) == secret[int(c)]:
-                results_dict.setdefault(str(c), 'black')
-                results.append('black')
+        results = {}
+        for c in self.player_choice:
+            if self.player_choice.get(c) == secret[int(c)]:
+                results.setdefault(str(c), 'black')
                 secret[int(c)] = 'used'
             else:
-                results.append('wrong')
-        for c in self.colour_dict:
-            if results[int(c)] == 'wrong':
-                if self.colour_dict.get(c) in secret:
-                    results[int(c)] = 'white'
-                    results_dict.setdefault(str(c), 'white')
+                results.setdefault(str(c), 'wrong')
+        for c in self.player_choice:
+            if results.get(str(c)) == 'wrong':
+                if self.player_choice.get(c) in secret:
+                    results[str(c)] = 'white'
                     for x in range(len(secret)):
-                        if self.colour_dict.get(c) == secret[x]:
+                        if self.player_choice.get(c) == secret[x]:
                             secret[x] = 'used'
                             break
                 else:
-                    results[int(c)] = None
-                    results_dict.setdefault(str(c), None)
-        return results_dict
+                    results[str(c)] = None
+        return results
 
     # after game, clean and reset fields, call main again
     def after_game(self):
