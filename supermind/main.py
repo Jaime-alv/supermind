@@ -479,6 +479,7 @@ class GameWindow(tk.Toplevel):
 
     # uncover secret code frame
     def uncover_secret(self):
+        self.submit_player['state'] = 'disabled'
         self.secret_frame.destroy()
         self.uncover_frame = tk.Frame(self.top_frame, bg='black')
         self.uncover_frame.pack(side='right')
@@ -580,8 +581,8 @@ class GameWindow(tk.Toplevel):
         self.round_label.pack(anchor='w', pady=5)
 
         # submit button
-        submit = tk.Button(self.right_frame, text="Submit", command=self.everything_ok)
-        submit.pack(anchor='s', side='bottom', pady=2, ipadx=20)
+        self.submit_player = tk.Button(self.right_frame, text="Submit", command=self.everything_ok)
+        self.submit_player.pack(anchor='s', side='bottom', pady=2, ipadx=20)
 
         # close window & save game
         close = tk.Button(self.right_frame, text='Close & save', fg='red', command=self.close)
@@ -702,6 +703,7 @@ class GameWindow(tk.Toplevel):
         self.update_round_counter()
         self.uncover_frame.destroy()
         self.hide_secret()
+        self.submit_player['state'] = 'normal'
         self.main()
 
     # print board and past choices, from bottom to top
