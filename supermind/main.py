@@ -450,11 +450,6 @@ class GameWindow(tk.Toplevel):
     # main game loop
     def main(self):
         if self.game_number <= self.games:
-            if self.game_number > 1:
-                self.uncover_frame.destroy()
-                self.hide_secret()
-            else:
-                self.hide_secret()
             self.select_colours()
         else:
             # game is over, time to reset 'continue'
@@ -488,7 +483,7 @@ class GameWindow(tk.Toplevel):
         self.uncover_frame = tk.Frame(self.top_frame, bg='black')
         self.uncover_frame.pack(side='right')
 
-        for n in range(self.secret):
+        for n in range(len(self.secret)):
             label = tk.Label(self.uncover_frame, text='', fg='black', bg=self.secret[n], width=11)
             label.grid(column=(n + 1), row=0, padx=1, pady=1)
 
@@ -503,6 +498,7 @@ class GameWindow(tk.Toplevel):
         self.top_frame.pack(side='top', anchor='e', expand=1, fill='both')
         zero_secret = tk.Label(self.top_frame, text='00', fg='black', bg='black')
         zero_secret.pack(side='left')
+        self.hide_secret()
 
         # get how much height canvas need
         total_height = self.get_total_height()
@@ -640,6 +636,7 @@ class GameWindow(tk.Toplevel):
 
         # win or lose condition
         if all(results.get(c) == 'black' for c in results):
+            self.uncover_secret()
             messagebox.showinfo('Congratulations!', 'You win.')
             self.profile['statistics'][self.dif]['wins'] += 1
             if self.profile['statistics'][self.dif].get('fastest') > (self.round - 1):
@@ -647,6 +644,7 @@ class GameWindow(tk.Toplevel):
             self.after_game()
 
         elif self.round > self.rounds:
+            self.uncover_secret()
             messagebox.showinfo('Sorry!', f"You lose. I was thinking in:\n{self.secret}")
             self.profile['statistics'][self.dif]['loses'] += 1
             self.after_game()
@@ -702,6 +700,8 @@ class GameWindow(tk.Toplevel):
         self.update_game_counter()
         # reset round counter to 1
         self.update_round_counter()
+        self.uncover_frame.destroy()
+        self.hide_secret()
         self.main()
 
     # print board and past choices, from bottom to top
