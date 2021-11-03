@@ -408,7 +408,7 @@ class GameWindow(tk.Toplevel):
         # check for saved game
         if not self.profile['continue'].get('bool'):
             self.current_game = {}  # dict for saving game state and all player choices
-            self.secret_code = []  # secret color code player needs to get
+            self.secret_code = []  # secret color code player needs to guess
             self.round = 1  # Current round
             self.game_number = 1  # Current game
         else:
@@ -443,11 +443,11 @@ class GameWindow(tk.Toplevel):
             row = ((self.total_rounds * 2) + 1) - game_round
             if game_round % 2 != 0:
                 rd_number = int((game_round / 2) + 1)
-                numb = tk.Label(column_round, text=f'{rd_number:02}', bg=board_colour)
-                numb.grid(column=0, row=row, pady=1, padx=1)
+                round_number_text = tk.Label(column_round, text=f'{rd_number:02}', bg=board_colour)
+                round_number_text.grid(column=0, row=row, pady=1, padx=1)
             else:
-                empty = tk.Label(column_round, text='00', fg=board_colour, bg=board_colour)
-                empty.grid(column=0, row=row, pady=1, padx=1)
+                result_round_text = tk.Label(column_round, text='00', fg=board_colour, bg=board_colour)
+                result_round_text.grid(column=0, row=row, pady=1, padx=1)
 
     # main game loop
     def main(self):
