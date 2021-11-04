@@ -1,9 +1,10 @@
 # Supermind
  Classic colour code-breaking game.
 
-The script is entirely written in Python, and only using standard libraries for the added challenge.
+The script is entirely written in Python, and using only standard libraries.
 
-The script is entirely written in Python, and using only standard libraries for the added challenge.
+![image](img/logo.jpg)
+###### Photo by <a href="https://www.pexels.com/@mccutcheon">Sharon McCutcheon</a> from Pexels
 
 # Work In Progress
 
@@ -59,6 +60,8 @@ and custom.
    - Hard: 8 different colours, 5 holes and 14 rounds.
    - Custom: you can customize your experience here with: Up to 8 different colours; up to 10 holes; up to 50 rounds 
    in each game.
+
+###### Background image Photo by Sharon McCutcheon from Pexels
 
 ## Board Window
 
