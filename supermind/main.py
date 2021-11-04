@@ -233,6 +233,7 @@ class MainWindow(tk.Tk):
 
     def del_this(self, i):
         pathlib.Path.unlink(pathlib.Path(f'profiles\\{i}.txt'), missing_ok=True)
+        self.player = ''
         self.delete_profile_window.destroy()
 
     # select difficult panel
