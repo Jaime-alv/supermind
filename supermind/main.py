@@ -37,10 +37,11 @@ class MainWindow(tk.Tk):
         super().__init__()
         logging.debug('Start main window')
         self.profile_list = []
+        self.width = 6
         self.for_delete = []
         self.player = ''
         self.profile = {}
-        self.option_add("*Font", font)
+        self.option_add("*Font", font)  # Change font to the one specified in font variable at sentinel line
         self.super_frame = tk.Frame(self)
         self.title('Supermind')
         self.geometry('250x250')
@@ -52,18 +53,21 @@ class MainWindow(tk.Tk):
     # create profile_list
     def create_profile_list(self):
         self.profile_list.clear()
+        temp_file = []
         for file in pathlib.Path('profiles').iterdir():
             file_str = str(file)
             name = re.compile(r'profiles\\(?P<name>.*?)\.txt')
             search = name.search(file_str)
-            self.profile_list.append(search.group('name'))
+            temp_file.append(search.group('name'))
+        self.profile_list = temp_file
+        for name in self.profile_list:
+            if len(name) > self.width:
+                self.width = len(name)
 
     # close any window
     def terminate(self, where, what, text):
         close_program = tk.Button(where, fg='red', command=what.destroy, text=text)
-        close_program['padx'] = 5
-        close_program['pady'] = 5
-        close_program.pack(side='bottom')
+        close_program.pack(side='bottom', padx=5, pady=5)
 
     # create menu
     def create_menu(self):
@@ -86,41 +90,45 @@ class MainWindow(tk.Tk):
     # create main frame
     def main_window(self):
         logging.debug('call main window')
-        new_profile = tk.Button(self.super_frame, text='New profile', command=self.create_new_profile)
-        new_profile.pack()
-        load_profile = tk.Button(self.super_frame, text='Load profile', command=self.load_profile)
-        load_profile.pack()
-        delete_profile = tk.Button(self.super_frame, text='Delete profile', command=self.delete_profile)
-        delete_profile.pack()
-        play_game = tk.Button(self.super_frame, text='New game', command=self.select_difficult)
-        play_game.pack()
+        new_profile = tk.Button(self.super_frame, text='New profile', command=self.create_new_profile, width=10)
+        new_profile.pack(pady=3)
+        load_profile = tk.Button(self.super_frame, text='Load profile', command=self.load_profile, width=10)
+        load_profile.pack(pady=3)
+        delete_profile = tk.Button(self.super_frame, text='Delete profile', command=self.delete_profile, width=10)
+        delete_profile.pack(pady=3)
+        play_game = tk.Button(self.super_frame, text='New game', command=self.select_difficult, width=10)
+        play_game.pack(pady=3)
 
     # create a new profile
     def create_new_profile(self):
         logging.debug('create new profile')
         self.new_profile_window = tk.Toplevel(self)
         self.new_profile_window.title('New profile')
+        self.new_profile_window.geometry("230x100")
+        self.new_profile_window.resizable(False, False)
         self.terminate(self.new_profile_window, self.new_profile_window, 'Close window')
         label = tk.Label(self.new_profile_window, text='Enter your name:')
-        label.pack()
+        label.pack(pady=3, padx=5, anchor='w')
         self.user_name = tk.StringVar()
-        self.name_entry = tk.Entry(self.new_profile_window, textvariable=self.user_name)
-        self.name_entry.pack()
+        self.name_entry = tk.Entry(self.new_profile_window, textvariable=self.user_name, font=('verdana', 11), width=15)
+        self.name_entry.pack(pady=3, padx=5, anchor='w', side='left')
         self.name_entry.focus()
         submit = tk.Button(self.new_profile_window, text='Submit', command=self.validate_name)
-        submit.pack()
+        submit.pack(pady=3, padx=5, side='right')
 
     def validate_name(self):
         user = self.user_name.get()
         self.create_profile_list()
         valid_characters = string.ascii_letters + string.digits + "_-."
-        if all(c in valid_characters for c in user):
+        if all(c in valid_characters for c in user) and 0 < len(user) < 20:
             self.player = user
             self.create_json()
         else:
             if user == '':
                 messagebox.showerror('Error!', "Name can't be empty!")
-            elif user in self.profile_list:
+            elif len(user) >= 20:
+                messagebox.showerror('Error!', "Profile name too long!")
+            elif user.lower() in self.profile_list:
                 messagebox.showerror('Error!', "There is another user with that name!")
             else:
                 messagebox.showerror('Error!', "Please, only valid characters!")
@@ -164,12 +172,16 @@ class MainWindow(tk.Tk):
         self.create_profile_list()
         if len(self.profile_list) != 0:
             self.load_profile_window = tk.Toplevel()
-            self.load_profile_window.title('Select a profile')
+            self.load_profile_window.title('Load')
+            self.load_profile_window.minsize(width=220, height=50)
+            self.load_profile_window.focus()
+            select_label = tk.Label(self.load_profile_window, text='- Select a profile:')
+            select_label.pack(anchor='w', padx=5, pady=5)
             self.terminate(self.load_profile_window, self.load_profile_window, 'Close window')
             for index in range(len(self.profile_list)):
-                button_with_name = tk.Button(self.load_profile_window, text=self.profile_list[index],
+                button_with_name = tk.Button(self.load_profile_window, text=self.profile_list[index], width=self.width,
                                              command=lambda i=index: self.load_this(self.profile_list[i]))
-                button_with_name.pack(anchor='w')
+                button_with_name.pack(anchor='w', padx=25, pady=5)
         else:
             messagebox.showerror('Error!', 'Create a profile first.')
             self.create_new_profile()
@@ -194,9 +206,12 @@ class MainWindow(tk.Tk):
         if len(self.profile_list) > 0:
             self.delete_profile_window = tk.Toplevel()
             self.delete_profile_window.title('Delete profile')
+            click = tk.Label(self.delete_profile_window, text='Click on the profile you wish to delete.')
+            click.pack(anchor='w', padx=5)
             self.terminate(self.delete_profile_window, self.delete_profile_window, 'Close window')
             for index in range(len(self.profile_list)):
                 button_with_name = tk.Button(self.delete_profile_window, text=self.profile_list[index],
+                                             width=self.width,
                                              command=lambda i=index: self.del_this(self.profile_list[i]))
                 button_with_name.pack(anchor='w', padx=5, pady=5, ipady=5)
         else:
@@ -213,6 +228,7 @@ class MainWindow(tk.Tk):
             reset_continue_mode(self.profile, self.player)
             self.select_difficult_window = tk.Toplevel()
             self.select_difficult_window.title('Options')
+            self.select_difficult_window.focus()
             # divided in 2 frames; left for normal modes, right for custom
             left_frame = tk.Frame(self.select_difficult_window)
             left_frame.pack(side='left')
@@ -465,9 +481,8 @@ class GameWindow(tk.Toplevel):
         show_scrollbar = False
         # board's left side (secret code, answer and game state)
         self.left_frame = tk.Frame(self)
-        self.left_frame.option_add("*Font", 'TkDefaultFont')
+        self.left_frame.option_add("*Font", 'TkDefaultFont')  # turn back to default font so everything is in line
         self.left_frame.pack(side='left', expand=1, fill='both')
-        print()
 
         # secret code frame
         self.top_frame = tk.Frame(self.left_frame, bg='black')
@@ -727,16 +742,25 @@ class GameWindow(tk.Toplevel):
 class ProfileRecords(tk.Toplevel):
     def __init__(self, master, player):
         super().__init__()
+        self.font_title = ('verdana', 9, 'bold')
+        self.font_data = ('verdana', 8)
         self.master = master
         self.player = player
-        self.option_add("*Font", font)
-        self.title(self.player)
+        self.option_add("*Font", self.font_data)
+        self.title('Records')
+        self.minsize(width=220, height=50)
         self.player_profile = read_profile(self.player)
         self.show()
 
     def show(self):
-        close_program = tk.Button(self, fg='red', command=self.destroy, text='Close')
+        close_program = tk.Button(self, fg='red', command=self.destroy, text='Close', font=font)
         close_program.pack(side='bottom', padx=5, pady=5)
+
+        profile_text = f'» Profile: {self.player}'
+        profile_label = tk.Label(self, text='» Profile:', font=self.font_title)
+        profile_label.pack(anchor='w')
+        player_name = tk.Label(self, text=f'    {self.player}', font=font)
+        player_name.pack(anchor='w')
 
         # statistics for easy difficulty
         easy_frame = tk.Frame(self)
@@ -760,8 +784,8 @@ class ProfileRecords(tk.Toplevel):
 
     # print profile function
     def profile_unpack(self, where, profile, dif):
-        easy_label = tk.Label(where, text=f'» {dif}:')
-        easy_label.grid(column=0, row=0, sticky='w')
+        difficulty_label = tk.Label(where, text=f'» {dif}:', font=self.font_title)
+        difficulty_label.grid(column=0, row=0, sticky='w')
         if profile.get('wins') + profile.get('loses') > 0:
             total_games = profile.get('wins') + profile.get('loses')
             total = tk.Label(where, text=f'    ·Total games: {total_games}')
