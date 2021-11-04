@@ -37,6 +37,8 @@ class MainWindow(tk.Tk):
         super().__init__()
         logging.debug('Start main window')
         self.background = tk.PhotoImage(file='img\\background.png')
+        self.icon = tk.PhotoImage(file='img\\icon.png')
+        self.wm_iconphoto(False, self.icon)
         self.profile_list = []
         self.width = 6
         self.for_delete = []
@@ -82,19 +84,22 @@ class MainWindow(tk.Tk):
         new_item.add_command(label='Delete profile', command=self.delete_profile)
         new_item.add_command(label='Profile statistics', command=self.show_profile)
         new_item.add_separator()
-        new_item.add_command(label='About', command=about_window)
+        new_item.add_command(label='About', command=self.about_window)
         new_item.add_separator()
         new_item.add_command(label='Close', command=self.super_frame.destroy)
 
         menu.add_cascade(label='Options', menu=new_item)
         self.config(menu=menu)
 
+    def about_window(self):
+        about_window(self.icon)
+
     # create main frame
     def main_window(self):
         background_canvas = tk.Canvas(self.super_frame, width=375, height=250)
         background_canvas.pack()
         background_canvas.create_image((0, 0), image=self.background, anchor='nw')
-        button_frame = tk.Frame(background_canvas)
+        #button_frame = tk.Frame(background_canvas)
 
         logging.debug('call main window')
         new_profile = tk.Button(self.super_frame, text='New profile', command=self.create_new_profile, width=12,
@@ -119,6 +124,7 @@ class MainWindow(tk.Tk):
         self.new_profile_window.title('New profile')
         self.new_profile_window.geometry("230x100")
         self.new_profile_window.resizable(False, False)
+        self.new_profile_window.wm_iconphoto(False, self.icon)
         self.terminate(self.new_profile_window, self.new_profile_window, 'Close window')
         label = tk.Label(self.new_profile_window, text='Enter your name:')
         label.pack(pady=3, padx=5, anchor='w')
@@ -186,6 +192,7 @@ class MainWindow(tk.Tk):
         if len(self.profile_list) != 0:
             self.load_profile_window = tk.Toplevel()
             self.load_profile_window.title('Load')
+            self.load_profile_window.wm_iconphoto(False, self.icon)
             self.load_profile_window.minsize(width=220, height=50)
             self.load_profile_window.focus()
             select_label = tk.Label(self.load_profile_window, text='- Select a profile:')
@@ -219,6 +226,7 @@ class MainWindow(tk.Tk):
         if len(self.profile_list) > 0:
             self.delete_profile_window = tk.Toplevel()
             self.delete_profile_window.title('Delete profile')
+            self.delete_profile_window.wm_iconphoto(False, self.icon)
             click = tk.Label(self.delete_profile_window, text='Click on the profile you wish to delete.')
             click.pack(anchor='w', padx=5)
             self.terminate(self.delete_profile_window, self.delete_profile_window, 'Close window')
@@ -242,6 +250,7 @@ class MainWindow(tk.Tk):
             reset_continue_mode(self.profile, self.player)
             self.select_difficult_window = tk.Toplevel()
             self.select_difficult_window.title('Options')
+            self.select_difficult_window.wm_iconphoto(False, self.icon)
             self.select_difficult_window.focus()
             # divided in 2 frames; left for normal modes, right for custom
             left_frame = tk.Frame(self.select_difficult_window)
@@ -353,7 +362,7 @@ class MainWindow(tk.Tk):
     # show profile statistics
     def show_profile(self):
         if self.player != '':
-            ProfileRecords(self, self.player)
+            ProfileRecords(self, self.player, self.icon)
         else:
             messagebox.showerror('Error!', 'Select a profile first!')
 
@@ -363,14 +372,16 @@ class MainWindow(tk.Tk):
             self.select_difficult_window.destroy()
         except AttributeError:
             pass
-        GameWindow(self, self.player)
+        GameWindow(self, self.player, self.icon)
         self.withdraw()
 
 
 class GameWindow(tk.Toplevel):
-    def __init__(self, master, player):
+    def __init__(self, master, player, icon):
         super().__init__()
         logging.debug(f'Start GameWindow with profile: {player}')
+        self.icon = icon
+        self.wm_iconphoto(False, self.icon)
         self.player = player
         self.master = master
         self.title('Supermind')
@@ -426,15 +437,18 @@ class GameWindow(tk.Toplevel):
         new_item = tk.Menu(menu, tearoff=0)
         new_item.add_command(label='Profile statistics', command=self.show_profile)
         new_item.add_separator()
-        new_item.add_command(label='About', command=about_window)
+        new_item.add_command(label='About', command=self.about_window)
         new_item.add_separator()
         new_item.add_command(label='Close', command=self.close)
 
         menu.add_cascade(label='Options', menu=new_item)
         self.config(menu=menu)
 
+    def about_window(self):
+        about_window(self.icon)
+
     def show_profile(self):
-        ProfileRecords(self, self.player)
+        ProfileRecords(self, self.player, self.icon)
 
     # round counter at left most side
     def column_round_counter(self):
@@ -752,14 +766,16 @@ class GameWindow(tk.Toplevel):
 
 # Show player's statistics
 class ProfileRecords(tk.Toplevel):
-    def __init__(self, master, player):
+    def __init__(self, master, player, icon):
         super().__init__()
         self.font_title = ('verdana', 9, 'bold')
         self.font_data = ('verdana', 8)
+        self.icon = icon
         self.master = master
         self.player = player
         self.option_add("*Font", self.font_data)
         self.title('Records')
+        self.wm_iconphoto(False, self.icon)
         self.minsize(width=220, height=50)
         self.focus()
         self.player_profile = read_profile(self.player)
@@ -820,11 +836,13 @@ class ProfileRecords(tk.Toplevel):
             nothing.grid(column=0, row=1, sticky='w')
 
 
-def about_window():
+def about_window(icon):
     about = tk.Toplevel()
     about.title('About')
     about.geometry('450x200')
+    about.wm_iconphoto(False, icon)
     about.resizable(False, False)
+    about.focus()
     # about.wm_iconphoto(False, icon)
     script = 'Supermind'
     contact = 'Contact: https://github.com/Jaime-alv'
@@ -843,11 +861,10 @@ def about_window():
     left_frame = tk.Frame(middle_frame)
     left_frame.pack(side='left')
 
-    """image = ico.resize((80, 80), Image.ANTIALIAS)
-    img = ImageTk.PhotoImage(image)
-    panel = tk.Label(left_frame, image=img)
-    panel.image = img
-    panel.pack(padx=10)"""
+    image = tk.PhotoImage(file='img\\icon_small.png')
+    panel = tk.Label(left_frame, image=image)
+    panel.image = image
+    panel.pack()
 
     contact_label = tk.Label(right_frame, text=contact, font=font)
     contact_label.pack(anchor='w', padx=10, pady=2)
