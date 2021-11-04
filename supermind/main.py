@@ -105,11 +105,12 @@ class MainWindow(tk.Tk):
         load_profile = tk.Button(self.super_frame, text='Load profile', command=self.load_profile, width=12, height=2)
         delete_profile = tk.Button(self.super_frame, text='Delete profile', command=self.delete_profile, width=12,
                                    height=2)
-        play_game = tk.Button(self.super_frame, text='New game', command=self.select_difficult, width=12, height=2)
+        self.play_game = tk.Button(self.super_frame, text='New game', command=self.select_difficult, width=12, height=2,
+                              state='disabled')
         background_canvas.create_window((50, 50), window=new_profile, anchor='nw')
         background_canvas.create_window((200, 50), window=load_profile, anchor='nw')
         background_canvas.create_window((50, 150), window=delete_profile, anchor='nw')
-        background_canvas.create_window((200, 150), window=play_game, anchor='nw')
+        background_canvas.create_window((200, 150), window=self.play_game, anchor='nw')
 
     # create a new profile
     def create_new_profile(self):
@@ -175,7 +176,7 @@ class MainWindow(tk.Tk):
             pathlib.Path('profiles').mkdir(exist_ok=True)
         save_profile(data, self.player)
         self.new_profile_window.destroy()
-
+        self.play_game['state'] = 'normal'
         # set player to new user and ask for a new game
         self.profile = read_profile(self.player)
         self.select_difficult()
@@ -212,6 +213,7 @@ class MainWindow(tk.Tk):
             self.load_profile_window.destroy()
         else:
             self.select_difficult()
+        self.play_game['state'] = 'normal'
         self.load_profile_window.destroy()
 
     # Delete an existing profile
@@ -233,9 +235,11 @@ class MainWindow(tk.Tk):
             messagebox.showerror('Error!', 'There are no profiles.\nCreate a new profile first.')
             self.create_new_profile()
 
-    def del_this(self, i):
-        pathlib.Path.unlink(pathlib.Path(f'profiles\\{i}.txt'), missing_ok=True)
-        self.player = ''
+    def del_this(self, player):
+        pathlib.Path.unlink(pathlib.Path(f'profiles\\{player}.txt'), missing_ok=True)
+        if player == self.player:
+            self.player = ''
+            self.play_game['state'] = 'disabled'
         self.delete_profile_window.destroy()
 
     # select difficult panel
