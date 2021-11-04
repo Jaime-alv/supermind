@@ -322,58 +322,9 @@ class MainWindow(tk.Tk):
     # show profile statistics
     def show_profile(self):
         if self.player != '':
-            player_profile = read_profile(self.player)
-            # create new window
-            profile_window = tk.Toplevel()
-            profile_window.title(self.player)
-            self.terminate(profile_window, profile_window, 'Close')
-
-            # statistics for easy difficulty
-            easy_frame = tk.Frame(profile_window)
-            easy_frame.pack(anchor='w')
-            self.profile_unpack(easy_frame, player_profile['statistics']['easy'], 'Easy')
-
-            # statistics for normal difficulty
-            normal_frame = tk.Frame(profile_window)
-            normal_frame.pack(anchor='w')
-            self.profile_unpack(normal_frame, player_profile['statistics']['normal'], 'Normal')
-
-            # statistics for hard difficulty
-            hard_frame = tk.Frame(profile_window)
-            hard_frame.pack(anchor='w')
-            self.profile_unpack(hard_frame, player_profile['statistics']['hard'], 'Hard')
-
-            # statistics for custom difficulty
-            custom_frame = tk.Frame(profile_window)
-            custom_frame.pack(anchor='w')
-            self.profile_unpack(custom_frame, player_profile['statistics']['custom'], 'Custom')
-
+            ProfileRecords(self, self.player)
         else:
             messagebox.showerror('Error!', 'Select a profile first!')
-
-    # print profile function
-    def profile_unpack(self, where, profile, dif):
-        easy_label = tk.Label(where, text=f'» {dif}:')
-        easy_label.grid(column=0, row=0, sticky='w')
-        if profile.get('wins') + profile.get('loses') > 0:
-            total_games = profile.get('wins') + profile.get('loses')
-            total = tk.Label(where, text=f'    ·Total games: {total_games}')
-            total.grid(column=0, row=1, sticky='w')
-            win_games = profile.get('wins')
-            win = tk.Label(where, text=f'    ·Total wins: {win_games}')
-            win.grid(column=0, row=2, sticky='w')
-            loss_games = profile.get('loses')
-            loss = tk.Label(where, text=f'    ·Total loses: {loss_games}')
-            loss.grid(column=0, row=3, sticky='w')
-            win_loss_ratio = round(win_games * 100 / total_games, 2)
-            win_loss = tk.Label(where, text=f'    ·Win/Loss ratio: {win_loss_ratio}%')
-            win_loss.grid(column=0, row=4, sticky='w')
-            fastet_game = profile.get('fastest')
-            fastest = tk.Label(where, text=f'    ·Shortest game: {fastet_game} rounds')
-            fastest.grid(column=0, row=5, sticky='w')
-        else:
-            nothing = tk.Label(where, text='    ·No data.')
-            nothing.grid(column=0, row=1, sticky='w')
 
     # create game window
     def game_window(self):
@@ -434,6 +385,25 @@ class GameWindow(tk.Toplevel):
         logging.debug(self.player_choice)
         self.right_frame_window()
         self.left_frame_window()
+        self.create_menu()
+
+    # create menu
+    def create_menu(self):
+        logging.debug('print cascade menu')
+        menu = tk.Menu(self)
+
+        new_item = tk.Menu(menu, tearoff=0)
+        new_item.add_command(label='Profile statistics', command=self.show_profile)
+        new_item.add_separator()
+        new_item.add_command(label='About', command=about_window)
+        new_item.add_separator()
+        new_item.add_command(label='Close', command=self.close)
+
+        menu.add_cascade(label='Options', menu=new_item)
+        self.config(menu=menu)
+
+    def show_profile(self):
+        ProfileRecords(self, self.player)
 
     # round counter at left most side
     def column_round_counter(self):
@@ -750,12 +720,71 @@ class GameWindow(tk.Toplevel):
         save_profile(self.profile, self.player)
 
 
+# Show player's statistics
+class ProfileRecords(tk.Toplevel):
+    def __init__(self, master, player):
+        super().__init__()
+        self.master = master
+        self.player = player
+        self.title(self.player)
+        self.player_profile = read_profile(self.player)
+        self.show()
+
+    def show(self):
+        close_program = tk.Button(self, fg='red', command=self.destroy, text='Close')
+        close_program.pack(side='bottom', padx=5, pady=5)
+
+        # statistics for easy difficulty
+        easy_frame = tk.Frame(self)
+        easy_frame.pack(anchor='w')
+        self.profile_unpack(easy_frame, self.player_profile['statistics']['easy'], 'Easy')
+
+        # statistics for normal difficulty
+        normal_frame = tk.Frame(self)
+        normal_frame.pack(anchor='w')
+        self.profile_unpack(normal_frame, self.player_profile['statistics']['normal'], 'Normal')
+
+        # statistics for hard difficulty
+        hard_frame = tk.Frame(self)
+        hard_frame.pack(anchor='w')
+        self.profile_unpack(hard_frame, self.player_profile['statistics']['hard'], 'Hard')
+
+        # statistics for custom difficulty
+        custom_frame = tk.Frame(self)
+        custom_frame.pack(anchor='w')
+        self.profile_unpack(custom_frame, self.player_profile['statistics']['custom'], 'Custom')
+
+    # print profile function
+    def profile_unpack(self, where, profile, dif):
+        easy_label = tk.Label(where, text=f'» {dif}:')
+        easy_label.grid(column=0, row=0, sticky='w')
+        if profile.get('wins') + profile.get('loses') > 0:
+            total_games = profile.get('wins') + profile.get('loses')
+            total = tk.Label(where, text=f'    ·Total games: {total_games}')
+            total.grid(column=0, row=1, sticky='w')
+            win_games = profile.get('wins')
+            win = tk.Label(where, text=f'    ·Total wins: {win_games}')
+            win.grid(column=0, row=2, sticky='w')
+            loss_games = profile.get('loses')
+            loss = tk.Label(where, text=f'    ·Total loses: {loss_games}')
+            loss.grid(column=0, row=3, sticky='w')
+            win_loss_ratio = round(win_games * 100 / total_games, 2)
+            win_loss = tk.Label(where, text=f'    ·Win/Loss ratio: {win_loss_ratio}%')
+            win_loss.grid(column=0, row=4, sticky='w')
+            fastet_game = profile.get('fastest')
+            fastest = tk.Label(where, text=f'    ·Shortest game: {fastet_game} rounds')
+            fastest.grid(column=0, row=5, sticky='w')
+        else:
+            nothing = tk.Label(where, text='    ·No data.')
+            nothing.grid(column=0, row=1, sticky='w')
+
+
 def about_window():
     about = tk.Toplevel()
     about.title('About')
     about.geometry('450x200')
     about.resizable(False, False)
-    #about.wm_iconphoto(False, icon)
+    # about.wm_iconphoto(False, icon)
     font = ('verdana', 10)
     script = 'Supermind'
     contact = 'Contact: https://github.com/Jaime-alv'
