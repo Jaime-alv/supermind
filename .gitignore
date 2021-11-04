@@ -9,6 +9,7 @@ __pycache__/
 profiles/
 profiles/*
 
-# not need
+# no need
 supermind/img/background.jpg
 supermind/img/logo.png
+supermind/img/*.psd
