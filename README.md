@@ -58,6 +58,7 @@ will be prompted with the new game window.
  - New game: if there is a profile loaded, you can start a new game from here. Write your desired number of games and hit
  any of the four buttons above with the difficulty label. There are four difficulties to choose from, easy, normal, hard
 and custom.
+
 ![new_game](img/new_game.jpg)
    - Easy: 6 different colours, 3 holes and 12 rounds.
    - Normal: 6 different colours, 4 holes and 12 rounds.
