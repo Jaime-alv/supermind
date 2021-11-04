@@ -75,7 +75,7 @@ class MainWindow(tk.Tk):
         new_item.add_command(label='Delete profile', command=self.delete_profile)
         new_item.add_command(label='Profile statistics', command=self.show_profile)
         new_item.add_separator()
-        new_item.add_command(label='About')
+        new_item.add_command(label='About', command=about_window)
         new_item.add_separator()
         new_item.add_command(label='Close', command=self.super_frame.destroy)
 
@@ -715,7 +715,8 @@ class GameWindow(tk.Toplevel):
             if game_round % 2 != 0:  # player choice
                 for peg in range(self.holes):
                     try:
-                        tag_colour = self.current_game['player'][str((game_round // 2) + 1)]['choice'].get(str(peg), None)
+                        tag_colour = self.current_game['player'][str((game_round // 2) + 1)]['choice'].get(str(peg),
+                                                                                                           None)
                         # json file stores int as str
                     except KeyError:
                         tag_colour = None
@@ -747,6 +748,51 @@ class GameWindow(tk.Toplevel):
         self.profile['continue']['game_number'] = self.game_number
         self.profile['continue']['current_game'] = self.current_game
         save_profile(self.profile, self.player)
+
+
+def about_window():
+    about = tk.Toplevel()
+    about.title('About')
+    about.geometry('450x200')
+    about.resizable(False, False)
+    #about.wm_iconphoto(False, icon)
+    font = ('verdana', 10)
+    script = 'Supermind'
+    contact = 'Contact: https://github.com/Jaime-alv'
+    repository = 'Repository: https://github.com/Jaime-alv/supermind'
+    version = 'Version: v0.2.0'
+    license_script = 'License: GPL-3.0-or-later'
+    author = 'Author: Jaime Alvarez Fernandez'
+
+    script_label = tk.Label(about, text=script, font=('verdana', 13, 'bold'))
+    script_label.pack(padx=10, pady=2, side='top', anchor='w')
+
+    middle_frame = tk.Frame(about)
+    middle_frame.pack(anchor='center')
+    right_frame = tk.Frame(middle_frame)
+    right_frame.pack(side='right')
+    left_frame = tk.Frame(middle_frame)
+    left_frame.pack(side='left')
+
+    """image = ico.resize((80, 80), Image.ANTIALIAS)
+    img = ImageTk.PhotoImage(image)
+    panel = tk.Label(left_frame, image=img)
+    panel.image = img
+    panel.pack(padx=10)"""
+
+    contact_label = tk.Label(right_frame, text=contact, font=font)
+    contact_label.pack(anchor='w', padx=10, pady=2)
+    repo_label = tk.Label(right_frame, text=repository, font=font)
+    repo_label.pack(anchor='w', padx=10, pady=2)
+    version_label = tk.Label(right_frame, text=version, font=font)
+    version_label.pack(anchor='w', padx=10, pady=2)
+    license_label = tk.Label(right_frame, text=license_script, font=font)
+    license_label.pack(anchor='w', padx=10, pady=2)
+    author_label = tk.Label(right_frame, text=author, font=font)
+    author_label.pack(anchor='w', padx=10, pady=2)
+
+    close_window = tk.Button(about, text='Ok', font=('verdana', 12), command=about.destroy)
+    close_window.pack(pady=4, anchor='s', side='bottom', ipadx=33)
 
 
 def reset_continue_mode(profile, player):
