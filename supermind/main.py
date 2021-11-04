@@ -250,11 +250,12 @@ class MainWindow(tk.Tk):
             self.select_difficult_window.title('Options')
             self.select_difficult_window.wm_iconphoto(False, self.icon)
             self.select_difficult_window.focus()
+            self.select_difficult_window.minsize(width=250, height=100)
             # divided in 2 frames; left for normal modes, right for custom
             left_frame = tk.Frame(self.select_difficult_window)
             left_frame.pack(side='left')
-            choose_label = tk.Label(left_frame, text='Choose a difficulty')
-            choose_label.pack()
+            choose_label = tk.Label(left_frame, text='Choose a difficulty:')
+            choose_label.pack(pady=3)
             four_buttons = tk.Frame(left_frame)
             four_buttons.pack()
             # easy (6 colours, 3 holes)
@@ -274,13 +275,13 @@ class MainWindow(tk.Tk):
             self.game_mode = tk.BooleanVar()
             classic_mode = tk.Radiobutton(left_frame, text='Classic mode', value=False, variable=self.game_mode,
                                           state='active')
-            classic_mode.pack(anchor='w')
+            classic_mode.pack(anchor='w', padx=3)
             extra_hard = tk.Radiobutton(left_frame, text='Extra hard mode', value=True, variable=self.game_mode)
-            extra_hard.pack(anchor='w')
+            extra_hard.pack(anchor='w', padx=3)
 
             # ask for number of total_games
-            games_label = tk.Label(left_frame, text="How many total_games will be playing?")
-            games_label.pack()
+            games_label = tk.Label(left_frame, text="How many games will be playing?")
+            games_label.pack(padx=3, pady=3)
             self.games = tk.StringVar()
             self.games.set('3')
             entry = tk.Entry(left_frame, textvariable=self.games)
@@ -319,33 +320,33 @@ class MainWindow(tk.Tk):
     def custom_frame(self):
         # append frame
         right_frame = tk.Frame(self.select_difficult_window)
-        right_frame.pack(anchor='e', side='right')
+        right_frame.pack(anchor='ne', side='right')
         questions_frame = tk.Frame(right_frame)
         questions_frame.pack()
         # how many colours
         colours_ask = tk.Label(questions_frame, text='How many colours?')
-        colours_ask.grid(column=0, row=0)
+        colours_ask.grid(column=0, row=0, pady=3)
         self.colours = tk.IntVar()
         self.colours.set(5)
         colours_spin = tk.Spinbox(questions_frame, from_=1, to=8, width=3, textvariable=self.colours)
-        colours_spin.grid(column=1, row=0)
+        colours_spin.grid(column=1, row=0, pady=3)
         # how many holes
         holes_ask = tk.Label(questions_frame, text='How many holes?')
-        holes_ask.grid(column=0, row=1)
+        holes_ask.grid(column=0, row=1, pady=3)
         self.holes = tk.IntVar()
         self.holes.set(5)
         holes_spin = tk.Spinbox(questions_frame, from_=1, to=10, width=3, textvariable=self.holes)
-        holes_spin.grid(column=1, row=1)
+        holes_spin.grid(column=1, row=1, pady=3)
         # how many total_rounds
-        rounds_ask = tk.Label(questions_frame, text='How many total_rounds?')
-        rounds_ask.grid(column=0, row=2)
+        rounds_ask = tk.Label(questions_frame, text='How many rounds?')
+        rounds_ask.grid(column=0, row=2, pady=3)
         self.rounds = tk.IntVar()
         self.rounds.set(15)
         rounds_spin = tk.Spinbox(questions_frame, from_=1, to=50, width=3, textvariable=self.rounds)
-        rounds_spin.grid(column=1, row=2)
+        rounds_spin.grid(column=1, row=2, pady=3)
         # submit button
         submit_button = tk.Button(right_frame, text='Submit', command=self.custom)
-        submit_button.pack(side='bottom', anchor='s')
+        submit_button.pack(side='bottom', anchor='s', pady=3)
 
     # custom
     def custom(self):
@@ -596,11 +597,11 @@ class GameWindow(tk.Toplevel):
         self.round_label.pack(anchor='w', pady=5)
 
         # submit button
-        self.submit_player = tk.Button(self.right_frame, text="Submit", command=self.everything_ok)
-        self.submit_player.pack(anchor='s', side='bottom', pady=2, ipadx=20)
+        self.submit_player = tk.Button(self.right_frame, text="Submit", command=self.everything_ok, width=10)
+        self.submit_player.pack(anchor='s', side='bottom', pady=2)
 
         # close window & save game
-        close = tk.Button(self.right_frame, text='Close & save', fg='red', command=self.close)
+        close = tk.Button(self.right_frame, text='Close & save', fg='red', command=self.close, width=10)
         close.pack(side='bottom', anchor='s', pady=2)
 
     # update game counter
