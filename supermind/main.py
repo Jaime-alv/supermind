@@ -40,6 +40,7 @@ class MainWindow(tk.Tk):
         self.for_delete = []
         self.player = ''
         self.profile = {}
+        self.option_add("*Font", font)
         self.super_frame = tk.Frame(self)
         self.title('Supermind')
         self.geometry('250x250')
@@ -464,7 +465,9 @@ class GameWindow(tk.Toplevel):
         show_scrollbar = False
         # board's left side (secret code, answer and game state)
         self.left_frame = tk.Frame(self)
+        self.left_frame.option_add("*Font", 'TkDefaultFont')
         self.left_frame.pack(side='left', expand=1, fill='both')
+        print()
 
         # secret code frame
         self.top_frame = tk.Frame(self.left_frame, bg='black')
@@ -726,6 +729,7 @@ class ProfileRecords(tk.Toplevel):
         super().__init__()
         self.master = master
         self.player = player
+        self.option_add("*Font", font)
         self.title(self.player)
         self.player_profile = read_profile(self.player)
         self.show()
@@ -785,7 +789,6 @@ def about_window():
     about.geometry('450x200')
     about.resizable(False, False)
     # about.wm_iconphoto(False, icon)
-    font = ('verdana', 9)
     script = 'Supermind'
     contact = 'Contact: https://github.com/Jaime-alv'
     repository = 'Repository: https://github.com/Jaime-alv/supermind'
@@ -847,5 +850,6 @@ if __name__ == '__main__':
                         format='%(asctime)s - %(levelname)s - %(message)s')
     pathlib.Path('..\\tests\\log.txt').open('w')
     board_colour = '#6a6c75'  # color code for board
+    font = ('verdana', 9)
     MainWindow().mainloop()
     logging.debug('close program')
