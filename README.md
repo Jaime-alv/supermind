@@ -47,6 +47,9 @@ No need to install any other libraries; a basic, clean python installation is al
 ## Main Window
 
 From this window you can create, delete or load a profile. 
+
+![main](img/main.jpg)
+
  - New profile: Every player needs a profile. Hitting this button will let you create a new one. All you
 need to do is fill in your name.
  - Load profile: If there are any profiles saved, here you can load them. After selecting a profile, you
@@ -55,6 +58,7 @@ will be prompted with the new game window.
  - New game: if there is a profile loaded, you can start a new game from here. Write your desired number of games and hit
  any of the four buttons above with the difficulty label. There are four difficulties to choose from, easy, normal, hard
 and custom.
+![new_game](img/new_game.jpg)
    - Easy: 6 different colours, 3 holes and 12 rounds.
    - Normal: 6 different colours, 4 holes and 12 rounds.
    - Hard: 8 different colours, 5 holes and 14 rounds.
