@@ -99,19 +99,13 @@ class MainWindow(tk.Tk):
         background_canvas = tk.Canvas(self.super_frame, width=375, height=250)
         background_canvas.pack()
         background_canvas.create_image((0, 0), image=self.background, anchor='nw')
-        #button_frame = tk.Frame(background_canvas)
-
         logging.debug('call main window')
         new_profile = tk.Button(self.super_frame, text='New profile', command=self.create_new_profile, width=12,
                                 height=2)
-        # new_profile.pack(pady=3)
         load_profile = tk.Button(self.super_frame, text='Load profile', command=self.load_profile, width=12, height=2)
-        # load_profile.pack(pady=3)
         delete_profile = tk.Button(self.super_frame, text='Delete profile', command=self.delete_profile, width=12,
                                    height=2)
-        # delete_profile.pack(pady=3)
         play_game = tk.Button(self.super_frame, text='New game', command=self.select_difficult, width=12, height=2)
-        # play_game.pack(pady=3)
         background_canvas.create_window((50, 50), window=new_profile, anchor='nw')
         background_canvas.create_window((200, 50), window=load_profile, anchor='nw')
         background_canvas.create_window((50, 150), window=delete_profile, anchor='nw')
@@ -260,16 +254,16 @@ class MainWindow(tk.Tk):
             four_buttons = tk.Frame(left_frame)
             four_buttons.pack()
             # easy (6 colours, 3 holes)
-            easy = tk.Button(four_buttons, text='Easy', command=self.easy)
+            easy = tk.Button(four_buttons, text='Easy', command=self.easy, width=8)
             easy.grid(column=0, row=0)
             # normal (6 colours, 4 holes)
-            normal = tk.Button(four_buttons, text='Normal', command=self.normal)
+            normal = tk.Button(four_buttons, text='Normal', command=self.normal, width=8)
             normal.grid(column=0, row=1)
             # hard (8 colours, 5 holes)
-            hard = tk.Button(four_buttons, text='Hard', command=self.hard)
+            hard = tk.Button(four_buttons, text='Hard', command=self.hard, width=8)
             hard.grid(column=1, row=0)
             # custom (up to 8 colours, up to 8 holes?)
-            custom = tk.Button(four_buttons, text='Custom', command=self.custom_frame)
+            custom = tk.Button(four_buttons, text='Custom', command=self.custom_frame, width=8)
             custom.grid(column=1, row=1)
 
             # radiobutton with classic mode and extra hard mode
@@ -386,6 +380,7 @@ class GameWindow(tk.Toplevel):
         self.master = master
         self.title('Supermind')
         self.resizable(False, False)
+        self.focus()
         self.profile = read_profile(self.player)
 
         # unpack all fields
