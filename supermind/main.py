@@ -468,9 +468,9 @@ class GameWindow(tk.Toplevel):
 
         # secret code frame
         self.top_frame = tk.Frame(self.left_frame, bg='black')
-        self.top_frame.pack(side='top', anchor='e', expand=1, fill='both')
+        self.top_frame.pack(side='top', anchor='w')
         zero_secret = tk.Label(self.top_frame, text='00', fg='black', bg='black')
-        zero_secret.pack(side='left')
+        zero_secret.pack(side='left', padx=1)
         self.hide_secret()
 
         # get how much height canvas need
