@@ -36,6 +36,7 @@ class MainWindow(tk.Tk):
     def __init__(self):
         super().__init__()
         logging.debug('Start main window')
+        self.background = tk.PhotoImage(file='img\\background.png')
         self.profile_list = []
         self.width = 6
         self.for_delete = []
@@ -43,8 +44,9 @@ class MainWindow(tk.Tk):
         self.profile = {}
         self.option_add("*Font", font)  # Change font to the one specified in font variable at sentinel line
         self.super_frame = tk.Frame(self)
+        self.resizable(False, False)
         self.title('Supermind')
-        self.geometry('250x250')
+        self.geometry('375x280')
         self.super_frame.pack(expand=1, fill='both')
         self.terminate(self.super_frame, self, 'Close game')
         self.main_window()
@@ -89,15 +91,26 @@ class MainWindow(tk.Tk):
 
     # create main frame
     def main_window(self):
+        background_canvas = tk.Canvas(self.super_frame, width=375, height=250)
+        background_canvas.pack()
+        background_canvas.create_image((0, 0), image=self.background, anchor='nw')
+        button_frame = tk.Frame(background_canvas)
+
         logging.debug('call main window')
-        new_profile = tk.Button(self.super_frame, text='New profile', command=self.create_new_profile, width=10)
-        new_profile.pack(pady=3)
-        load_profile = tk.Button(self.super_frame, text='Load profile', command=self.load_profile, width=10)
-        load_profile.pack(pady=3)
-        delete_profile = tk.Button(self.super_frame, text='Delete profile', command=self.delete_profile, width=10)
-        delete_profile.pack(pady=3)
-        play_game = tk.Button(self.super_frame, text='New game', command=self.select_difficult, width=10)
-        play_game.pack(pady=3)
+        new_profile = tk.Button(self.super_frame, text='New profile', command=self.create_new_profile, width=12,
+                                height=2)
+        # new_profile.pack(pady=3)
+        load_profile = tk.Button(self.super_frame, text='Load profile', command=self.load_profile, width=12, height=2)
+        # load_profile.pack(pady=3)
+        delete_profile = tk.Button(self.super_frame, text='Delete profile', command=self.delete_profile, width=12,
+                                   height=2)
+        # delete_profile.pack(pady=3)
+        play_game = tk.Button(self.super_frame, text='New game', command=self.select_difficult, width=12, height=2)
+        # play_game.pack(pady=3)
+        background_canvas.create_window((50, 50), window=new_profile, anchor='nw')
+        background_canvas.create_window((200, 50), window=load_profile, anchor='nw')
+        background_canvas.create_window((50, 150), window=delete_profile, anchor='nw')
+        background_canvas.create_window((200, 150), window=play_game, anchor='nw')
 
     # create a new profile
     def create_new_profile(self):
@@ -120,7 +133,7 @@ class MainWindow(tk.Tk):
         user = self.user_name.get()
         self.create_profile_list()
         valid_characters = string.ascii_letters + string.digits + "_-."
-        if all(c in valid_characters for c in user) and 0 < len(user) < 20:
+        if all(c in valid_characters for c in user) and 0 < len(user) < 20 and user.lower() not in self.profile_list:
             self.player = user
             self.create_json()
         else:
@@ -504,8 +517,7 @@ class GameWindow(tk.Toplevel):
         extension = self.top_frame.winfo_width()
 
         if show_scrollbar:
-            self.board_canvas.configure(width=extension, height=total_height)
-            self.board_canvas.update()
+            self.board_canvas.configure(width=(extension - 2), height=total_height)
             self.board_canvas.pack(expand=0, fill='y')
 
             scrollbar = tk.Scrollbar(self, command=self.board_canvas.yview)
@@ -518,7 +530,6 @@ class GameWindow(tk.Toplevel):
 
         else:
             self.board_canvas.configure(width=(extension - 2), height=(total_height - 2))
-            self.board_canvas.update()
             self.board_canvas.pack(expand=0, fill='y')
 
         self.frame_inside_canvas = tk.Frame(self.board_canvas, bg=board_colour)
@@ -749,6 +760,7 @@ class ProfileRecords(tk.Toplevel):
         self.option_add("*Font", self.font_data)
         self.title('Records')
         self.minsize(width=220, height=50)
+        self.focus()
         self.player_profile = read_profile(self.player)
         self.show()
 
