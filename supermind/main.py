@@ -785,7 +785,7 @@ def about_window():
     about.geometry('450x200')
     about.resizable(False, False)
     # about.wm_iconphoto(False, icon)
-    font = ('verdana', 10)
+    font = ('verdana', 9)
     script = 'Supermind'
     contact = 'Contact: https://github.com/Jaime-alv'
     repository = 'Repository: https://github.com/Jaime-alv/supermind'
