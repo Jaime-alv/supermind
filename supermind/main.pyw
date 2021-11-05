@@ -460,6 +460,8 @@ class GameWindow(tk.Toplevel):
         # Create cascade for Help
         help_menu = tk.Menu(menu, tearoff=0)
         help_menu.add_command(label='Help', command=self.help_player)
+        help_menu.add_separator()
+        help_menu.add_command(label='Game')
 
         # Add cascades to menu frame
         menu.add_cascade(label='Options', menu=options_menu)
