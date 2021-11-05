@@ -2,7 +2,7 @@
 # Classic colour code-breaking game.
 #
 # Copyright (C) 2021 Jaime Alvarez Fernandez
-# Contact: https://github.com/Jaime-alv
+# Contact: jaime.af.git@gmail.com
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -36,8 +36,10 @@ class MainWindow(tk.Tk):
     def __init__(self):
         super().__init__()
         logging.debug('Start main window')
-        self.background = tk.PhotoImage(file='img\\background.png')
-        self.icon = tk.PhotoImage(file='img\\icon.png')
+        background_image = pathlib.Path('img/background.png')
+        icon_file = pathlib.Path('img/icon.png')
+        self.background = tk.PhotoImage(file=background_image)
+        self.icon = tk.PhotoImage(file=icon_file)
         self.wm_iconphoto(False, self.icon)
         self.profile_list = []
         self.width = 6
@@ -60,7 +62,7 @@ class MainWindow(tk.Tk):
         temp_file = []
         for file in pathlib.Path('profiles').iterdir():
             file_str = str(file)
-            name = re.compile(r'profiles\\(?P<name>.*?)\.txt')
+            name = re.compile(r'[\\/]+(?P<name>.*?)\.txt')
             search = name.search(file_str)
             temp_file.append(search.group('name'))
         self.profile_list = temp_file
@@ -100,13 +102,13 @@ class MainWindow(tk.Tk):
         background_canvas.pack()
         background_canvas.create_image((0, 0), image=self.background, anchor='nw')
         logging.debug('call main window')
-        new_profile = tk.Button(self.super_frame, text='New profile', command=self.create_new_profile, width=12,
-                                height=2)
-        load_profile = tk.Button(self.super_frame, text='Load profile', command=self.load_profile, width=12, height=2)
-        delete_profile = tk.Button(self.super_frame, text='Delete profile', command=self.delete_profile, width=12,
-                                   height=2)
-        self.play_game = tk.Button(self.super_frame, text='New game', command=self.select_difficult, width=12, height=2,
-                              state='disabled')
+        new_profile = tk.Button(self.super_frame, text='New profile', command=self.create_new_profile, width=10,
+                                height=1)
+        load_profile = tk.Button(self.super_frame, text='Load profile', command=self.load_profile, width=10, height=1)
+        delete_profile = tk.Button(self.super_frame, text='Delete profile', command=self.delete_profile, width=10,
+                                   height=1)
+        self.play_game = tk.Button(self.super_frame, text='New game', command=self.select_difficult, width=10, height=1,
+                                   state='disabled')
         background_canvas.create_window((50, 50), window=new_profile, anchor='nw')
         background_canvas.create_window((200, 50), window=load_profile, anchor='nw')
         background_canvas.create_window((50, 150), window=delete_profile, anchor='nw')
@@ -134,20 +136,25 @@ class MainWindow(tk.Tk):
         user = self.user_name.get()
         self.create_profile_list()
         valid_characters = string.ascii_letters + string.digits + "_-."
-        if all(c in valid_characters for c in user) and 0 < len(user) < 20 and user.lower() not in self.profile_list:
+        if user in self.profile_list or user.lower() in [name.lower() for name in self.profile_list]:
+            messagebox.showerror('Error!', "There is another user with that name!")
+            self.validate_name_error()
+        elif user == '':
+            messagebox.showerror('Error!', "Name can't be empty!")
+            self.validate_name_error()
+        elif len(user) >= 20:
+            messagebox.showerror('Error!', "Profile name too long!")
+            self.validate_name_error()
+        elif any(c not in valid_characters for c in user):
+            messagebox.showerror('Error!', "Please, only valid characters!")
+            self.validate_name_error()
+        else:
             self.player = user
             self.create_json()
-        else:
-            if user == '':
-                messagebox.showerror('Error!', "Name can't be empty!")
-            elif len(user) >= 20:
-                messagebox.showerror('Error!', "Profile name too long!")
-            elif user.lower() in self.profile_list:
-                messagebox.showerror('Error!', "There is another user with that name!")
-            else:
-                messagebox.showerror('Error!', "Please, only valid characters!")
-            self.user_name.set('')
-            self.name_entry.focus()
+
+    def validate_name_error(self):
+        self.user_name.set('')
+        self.name_entry.focus()
 
     def create_json(self):
         stat = {'wins': 0,
@@ -236,7 +243,7 @@ class MainWindow(tk.Tk):
             self.create_new_profile()
 
     def del_this(self, player):
-        pathlib.Path.unlink(pathlib.Path(f'profiles\\{player}.txt'), missing_ok=True)
+        pathlib.Path.unlink(pathlib.Path(f'profiles/{player}.txt'), missing_ok=True)
         if player == self.player:
             self.player = ''
             self.play_game['state'] = 'disabled'
@@ -379,6 +386,7 @@ class GameWindow(tk.Toplevel):
     def __init__(self, master, player, icon):
         super().__init__()
         logging.debug(f'Start GameWindow with profile: {player}')
+        self.board_colour = '#6a6c75'  # color code for board
         self.icon = icon
         self.wm_iconphoto(False, self.icon)
         self.player = player
@@ -458,10 +466,10 @@ class GameWindow(tk.Toplevel):
             row = ((self.total_rounds * 2) + 1) - game_round
             if game_round % 2 != 0:
                 rd_number = int((game_round / 2) + 1)
-                round_number_text = tk.Label(column_round, text=f'{rd_number:02}', bg=board_colour)
+                round_number_text = tk.Label(column_round, text=f'{rd_number:02}', bg=self.board_colour)
                 round_number_text.grid(column=0, row=row, pady=1, padx=1)
             else:
-                result_round_text = tk.Label(column_round, text='00', fg=board_colour, bg=board_colour)
+                result_round_text = tk.Label(column_round, text='00', fg=self.board_colour, bg=self.board_colour)
                 result_round_text.grid(column=0, row=row, pady=1, padx=1)
 
     # main game loop
@@ -527,7 +535,7 @@ class GameWindow(tk.Toplevel):
             show_scrollbar = True
             total_height = int((screen * 3) / 4)
 
-        self.board_canvas = tk.Canvas(self.left_frame, bg=board_colour)
+        self.board_canvas = tk.Canvas(self.left_frame, bg=self.board_colour)
         self.top_frame.update()
         extension = self.top_frame.winfo_width()
 
@@ -547,7 +555,7 @@ class GameWindow(tk.Toplevel):
             self.board_canvas.configure(width=(extension - 2), height=(total_height - 2))
             self.board_canvas.pack(expand=0, fill='y')
 
-        self.frame_inside_canvas = tk.Frame(self.board_canvas, bg=board_colour)
+        self.frame_inside_canvas = tk.Frame(self.board_canvas, bg=self.board_colour)
         self.board_canvas.create_window((0, 0), window=self.frame_inside_canvas, anchor='nw')
 
         # total_rounds frame (center frame with all player solutions)
@@ -735,7 +743,7 @@ class GameWindow(tk.Toplevel):
                     except KeyError:
                         tag_colour = None
                     if tag_colour is None:
-                        tag_colour = board_colour
+                        tag_colour = self.board_colour
                     player_result = tk.Label(self.center_frame, bg=tag_colour, width=11)
                     player_result.grid(column=peg, row=row, padx=1, pady=1)
             elif game_round % 2 == 0:  # result
@@ -745,7 +753,7 @@ class GameWindow(tk.Toplevel):
                     except KeyError:
                         tag_colour = None
                     if tag_colour is None:
-                        tag_colour = board_colour
+                        tag_colour = self.board_colour
                     player_result = tk.Label(self.center_frame, bg=tag_colour, width=11)
                     player_result.grid(column=peg, row=row, padx=1, pady=1)
 
@@ -838,14 +846,13 @@ class ProfileRecords(tk.Toplevel):
 
 def about_window(icon):
     about = tk.Toplevel()
-    about.title('About')
+    about.title('About...')
     about.geometry('450x200')
     about.wm_iconphoto(False, icon)
     about.resizable(False, False)
     about.focus()
-    # about.wm_iconphoto(False, icon)
     script = 'Supermind'
-    contact = 'Contact: https://github.com/Jaime-alv'
+    contact = 'Contact: jaime.af.git@gmail.com'
     repository = 'Repository: https://github.com/Jaime-alv/supermind'
     version = 'Version: v0.2.0'
     license_script = 'License: GPL-3.0-or-later'
@@ -861,7 +868,8 @@ def about_window(icon):
     left_frame = tk.Frame(middle_frame)
     left_frame.pack(side='left')
 
-    image = tk.PhotoImage(file='img\\icon_small.png')
+    image_file = pathlib.Path('img\\icon_small.png')
+    image = tk.PhotoImage(file=image_file)
     panel = tk.Label(left_frame, image=image)
     panel.image = image
     panel.pack()
@@ -889,21 +897,21 @@ def reset_continue_mode(profile, player):
 
 
 def save_profile(profile, player):
-    with pathlib.Path(f'profiles\\{player}.txt').open('w') as overwrite:
+    with pathlib.Path(f'profiles/{player}.txt').open('w') as overwrite:
         json.dump(profile, overwrite)
 
 
 def read_profile(player):
-    with pathlib.Path(f'profiles\\{player}.txt').open('r') as read:
+    with pathlib.Path(f'profiles/{player}.txt').open('r') as read:
         profile = json.load(read)
     return profile
 
 
 if __name__ == '__main__':
-    logging.basicConfig(filename='..\\tests\\log.txt', level=logging.DEBUG,
+    log_file = pathlib.Path('../tests/log.txt')
+    logging.basicConfig(filename=log_file, level=logging.DEBUG,
                         format='%(asctime)s - %(levelname)s - %(message)s')
-    pathlib.Path('..\\tests\\log.txt').open('w')
-    board_colour = '#6a6c75'  # color code for board
+    log_file.open('w')
     font = ('verdana', 9)
     MainWindow().mainloop()
     logging.debug('close program')
