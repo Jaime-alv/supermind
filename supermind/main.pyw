@@ -113,7 +113,7 @@ class MainWindow(tk.Tk):
         background_canvas.create_window((115, 190), window=load_profile, anchor='nw')
         background_canvas.create_window((20, 220), window=delete_profile, anchor='nw')
         background_canvas.create_window((115, 220), window=self.play_game, anchor='nw')
-        # background_canvas.create_text((225, 50), text='Supermind', font=('wide latin', 33), fill='#db0e46')
+        background_canvas.create_text((195, 50), text='Supermind', font=('broadway', 43), fill='#db0e46')
 
     # create a new profile
     def create_new_profile(self):
@@ -593,15 +593,19 @@ class GameWindow(tk.Toplevel):
 
         # game counter
         game_counter = tk.Frame(self.right_frame)
-        game_counter.pack(anchor='center', expand=1)
-        self.game_label = tk.Label(game_counter, text=f'Game #:{self.game_number}')
-        self.game_label.pack(anchor='w', pady=5)
+        game_counter.pack(anchor='n', expand=1)
+        game_text = tk.Label(game_counter, text='Game:', font=('verdana', 12, 'bold'))
+        game_text.pack(anchor='w', pady=5)
+        self.game_label = tk.Label(game_counter, text=f'{self.game_number:02}', font=('bankgothic lt bt', 50))
+        self.game_label.pack(anchor='w', pady=0)
 
         # round counter
         round_counter = tk.Frame(self.right_frame)
         round_counter.pack(anchor='n', side='top', expand=0)
-        self.round_label = tk.Label(round_counter, text=f'Round #:{self.round}')
-        self.round_label.pack(anchor='w', pady=5)
+        round_text = tk.Label(round_counter, text='Round:')
+        round_text.pack(anchor='w', pady=2, side='left')
+        self.round_label = tk.Label(round_counter, text=f'{self.round:02}')
+        self.round_label.pack(anchor='w', pady=2, side='right')
 
         # submit button
         self.submit_player = tk.Button(self.right_frame, text="Submit", command=self.everything_ok, width=10)
@@ -613,12 +617,12 @@ class GameWindow(tk.Toplevel):
 
     # update game counter
     def update_game_counter(self):
-        new_game = f'Game #:{self.game_number}'
+        new_game = f'{self.game_number:02}'
         self.game_label.configure(text=new_game)
 
     # update round counter
     def update_round_counter(self):
-        new_round = f'Round #:{self.round}'
+        new_round = f'{self.round:02}'
         self.round_label.configure(text=new_round)
 
     # save player's choice in a dictionary so it can be checked later
@@ -855,7 +859,7 @@ def about_window(icon):
     repository = 'Repository: https://github.com/Jaime-alv/supermind'
     version = 'Version: v0.2.0'
     license_script = 'License: GPL-3.0-or-later'
-    author = 'Author: Jaime Alvarez Fernandez'
+    author = 'Copyright (C) 2021 Jaime Alvarez Fernandez'
 
     script_label = tk.Label(about, text=script, font=('verdana', 13, 'bold'))
     script_label.pack(padx=10, pady=2, side='top', anchor='w')
@@ -884,8 +888,8 @@ def about_window(icon):
     author_label = tk.Label(right_frame, text=author, font=font)
     author_label.pack(anchor='w', padx=10, pady=2)
 
-    close_window = tk.Button(about, text='Ok', font=('verdana', 12), command=about.destroy)
-    close_window.pack(pady=4, anchor='s', side='bottom', ipadx=33)
+    close_window = tk.Button(about, text='Ok', font=('verdana', 10), command=about.destroy)
+    close_window.pack(pady=4, anchor='s', side='bottom', ipadx=2)
 
 
 def reset_continue_mode(profile, player):
