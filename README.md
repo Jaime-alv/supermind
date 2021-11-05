@@ -14,7 +14,7 @@ The script is entirely written in Python, and using only standard libraries.
 
 The player, as the codebreaker, tries to guess the pattern, in both order and color, within a set number of rounds. 
 Each guess is made by placing a row of coloured tags on the decoding board. 
-Once placed, the script, as the code maker, provides feedback by placing  coloured tags in front of the row with the guess. 
+Once placed, the script, as the code maker, provides feedback by placing  coloured tags on top of the row with the guess. 
 A black key tag is placed for each code tag from the guess which is correct in both color and position. A white key tag
 indicates the existence of a correct color code tag placed in the wrong position.
 
@@ -79,7 +79,7 @@ Each time you submit a round, your colour choices will be displayed at a new lin
 tries you have left.
  - Black: right colour in the right position.
  - White: right colour, wrong position.
- - Grey/None: that colour is not in the secret code.
+ - Grey/None: colour is not in the secret code.
 
 On the left side you can find the game board.
 
@@ -90,6 +90,11 @@ On the right side, you can see:
 - Close: Close this window and take you to the main window, the game will save its state, so you can continue it later.
 
 ## Options menu
+
+In the Options menu, you can get information about the script itself, your statistics, the game rules or the game's 
+settings.
+
+
 
 ###### Copyright (C) 2021 Jaime Alvarez Fernandez
 
