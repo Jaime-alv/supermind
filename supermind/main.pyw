@@ -910,7 +910,7 @@ def about_window(icon):
     script = 'Supermind'
     contact = 'Contact: jaime.af.git@gmail.com'
     repository = 'Repository: https://github.com/Jaime-alv/supermind'
-    version = 'Version: v0.2.0'
+    version = 'Version: v1.0.0'
     license_script = 'License: GPL-3.0-or-later'
     author = 'Copyright (C) 2021 Jaime Alvarez Fernandez'
 
