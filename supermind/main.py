@@ -36,7 +36,7 @@ class MainWindow(tk.Tk):
     def __init__(self):
         super().__init__()
         logging.debug('Start main window')
-        background_image = pathlib.Path('img/background.png')
+        background_image = pathlib.Path('img/bg_450x300.png')
         icon_file = pathlib.Path('img/icon.png')
         self.background = tk.PhotoImage(file=background_image)
         self.icon = tk.PhotoImage(file=icon_file)
@@ -49,8 +49,8 @@ class MainWindow(tk.Tk):
         self.option_add("*Font", font)  # Change font to the one specified in font variable at sentinel line
         self.super_frame = tk.Frame(self)
         self.resizable(False, False)
-        self.title('Supermind')
-        self.geometry('375x280')
+        self.title('Main')
+        self.geometry('450x320')
         self.super_frame.pack(expand=1, fill='both')
         self.terminate(self.super_frame, self, 'Close game')
         self.main_window()
@@ -98,7 +98,7 @@ class MainWindow(tk.Tk):
 
     # create main frame
     def main_window(self):
-        background_canvas = tk.Canvas(self.super_frame, width=375, height=250)
+        background_canvas = tk.Canvas(self.super_frame, width=450, height=300)
         background_canvas.pack()
         background_canvas.create_image((0, 0), image=self.background, anchor='nw')
         logging.debug('call main window')
@@ -109,10 +109,11 @@ class MainWindow(tk.Tk):
                                    height=1)
         self.play_game = tk.Button(self.super_frame, text='New game', command=self.select_difficult, width=10, height=1,
                                    state='disabled')
-        background_canvas.create_window((50, 50), window=new_profile, anchor='nw')
-        background_canvas.create_window((200, 50), window=load_profile, anchor='nw')
-        background_canvas.create_window((50, 150), window=delete_profile, anchor='nw')
-        background_canvas.create_window((200, 150), window=self.play_game, anchor='nw')
+        background_canvas.create_window((20, 190), window=new_profile, anchor='nw')
+        background_canvas.create_window((115, 190), window=load_profile, anchor='nw')
+        background_canvas.create_window((20, 220), window=delete_profile, anchor='nw')
+        background_canvas.create_window((115, 220), window=self.play_game, anchor='nw')
+        # background_canvas.create_text((225, 50), text='Supermind', font=('wide latin', 33), fill='#db0e46')
 
     # create a new profile
     def create_new_profile(self):
@@ -327,30 +328,30 @@ class MainWindow(tk.Tk):
     def custom_frame(self):
         # append frame
         right_frame = tk.Frame(self.select_difficult_window)
-        right_frame.pack(anchor='ne', side='right')
+        right_frame.pack(anchor='n', side='right')
         questions_frame = tk.Frame(right_frame)
         questions_frame.pack()
         # how many colours
         colours_ask = tk.Label(questions_frame, text='How many colours?')
-        colours_ask.grid(column=0, row=0, pady=3)
+        colours_ask.grid(column=0, row=0, pady=3, padx=3)
         self.colours = tk.IntVar()
         self.colours.set(5)
         colours_spin = tk.Spinbox(questions_frame, from_=1, to=8, width=3, textvariable=self.colours)
-        colours_spin.grid(column=1, row=0, pady=3)
+        colours_spin.grid(column=1, row=0, pady=3, padx=3)
         # how many holes
         holes_ask = tk.Label(questions_frame, text='How many holes?')
-        holes_ask.grid(column=0, row=1, pady=3)
+        holes_ask.grid(column=0, row=1, pady=3, padx=3)
         self.holes = tk.IntVar()
         self.holes.set(5)
         holes_spin = tk.Spinbox(questions_frame, from_=1, to=10, width=3, textvariable=self.holes)
-        holes_spin.grid(column=1, row=1, pady=3)
+        holes_spin.grid(column=1, row=1, pady=3, padx=3)
         # how many total_rounds
         rounds_ask = tk.Label(questions_frame, text='How many rounds?')
-        rounds_ask.grid(column=0, row=2, pady=3)
+        rounds_ask.grid(column=0, row=2, pady=3, padx=3)
         self.rounds = tk.IntVar()
         self.rounds.set(15)
         rounds_spin = tk.Spinbox(questions_frame, from_=1, to=50, width=3, textvariable=self.rounds)
-        rounds_spin.grid(column=1, row=2, pady=3)
+        rounds_spin.grid(column=1, row=2, pady=3, padx=3)
         # submit button
         submit_button = tk.Button(right_frame, text='Submit', command=self.custom)
         submit_button.pack(side='bottom', anchor='s', pady=3)
@@ -391,7 +392,7 @@ class GameWindow(tk.Toplevel):
         self.wm_iconphoto(False, self.icon)
         self.player = player
         self.master = master
-        self.title('Supermind')
+        self.title('Game')
         self.resizable(False, False)
         self.focus()
         self.profile = read_profile(self.player)
