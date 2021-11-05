@@ -80,21 +80,29 @@ class MainWindow(tk.Tk):
         logging.debug('print cascade menu')
         menu = tk.Menu(self.super_frame)
 
-        new_item = tk.Menu(menu, tearoff=0)
-        new_item.add_command(label='New profile', command=self.create_new_profile)
-        new_item.add_command(label='Load profile', command=self.load_profile)
-        new_item.add_command(label='Delete profile', command=self.delete_profile)
-        new_item.add_command(label='Profile statistics', command=self.show_profile)
-        new_item.add_separator()
-        new_item.add_command(label='About', command=self.about_window)
-        new_item.add_separator()
-        new_item.add_command(label='Close', command=self.super_frame.destroy)
+        options_menu = tk.Menu(menu, tearoff=0)
+        options_menu.add_command(label='New profile', command=self.create_new_profile)
+        options_menu.add_command(label='Load profile', command=self.load_profile)
+        options_menu.add_command(label='Delete profile', command=self.delete_profile)
+        options_menu.add_command(label='Profile statistics', command=self.show_profile)
+        options_menu.add_separator()
+        options_menu.add_command(label='About', command=self.about_window)
+        options_menu.add_separator()
+        options_menu.add_command(label='Close', command=self.super_frame.destroy)
 
-        menu.add_cascade(label='Options', menu=new_item)
+        # Create cascade for Help
+        help_menu = tk.Menu(menu, tearoff=0)
+        help_menu.add_command(label='Help', command=self.help_player)
+
+        menu.add_cascade(label='Options', menu=options_menu)
+        menu.add_cascade(label='Help', menu=help_menu)
         self.config(menu=menu)
 
     def about_window(self):
         about_window(self.icon)
+
+    def help_player(self):
+        help_player(self.icon)
 
     # create main frame
     def main_window(self):
@@ -441,14 +449,21 @@ class GameWindow(tk.Toplevel):
         logging.debug('print cascade menu')
         menu = tk.Menu(self)
 
-        new_item = tk.Menu(menu, tearoff=0)
-        new_item.add_command(label='Profile statistics', command=self.show_profile)
-        new_item.add_separator()
-        new_item.add_command(label='About', command=self.about_window)
-        new_item.add_separator()
-        new_item.add_command(label='Close', command=self.close)
+        # Create cascade for options
+        options_menu = tk.Menu(menu, tearoff=0)
+        options_menu.add_command(label='Profile statistics', command=self.show_profile)
+        options_menu.add_separator()
+        options_menu.add_command(label='About', command=self.about_window)
+        options_menu.add_separator()
+        options_menu.add_command(label='Close', command=self.close)
 
-        menu.add_cascade(label='Options', menu=new_item)
+        # Create cascade for Help
+        help_menu = tk.Menu(menu, tearoff=0)
+        help_menu.add_command(label='Help', command=self.help_player)
+
+        # Add cascades to menu frame
+        menu.add_cascade(label='Options', menu=options_menu)
+        menu.add_cascade(label='Help', menu=help_menu)
         self.config(menu=menu)
 
     def about_window(self):
@@ -456,6 +471,9 @@ class GameWindow(tk.Toplevel):
 
     def show_profile(self):
         ProfileRecords(self, self.player, self.icon)
+
+    def help_player(self):
+        help_player(self.icon)
 
     # round counter at left most side
     def column_round_counter(self):
@@ -845,6 +863,35 @@ class ProfileRecords(tk.Toplevel):
         else:
             nothing = tk.Label(where, text='    ·No data.')
             nothing.grid(column=0, row=1, sticky='w')
+
+
+def help_player(icon):
+    help_window = tk.Toplevel()
+    help_window.title('Help')
+    help_window.resizable(False, False)
+    help_window.focus()
+    help_window.wm_iconphoto(False, icon)
+
+    help_text = """
+ The player, as the codebreaker, tries to guess the pattern,
+in both order and color, within a set number of rounds.
+
+ Each guess is made by placing a row of coloured tags on the 
+decoding board. Once placed, the script, as the code maker, 
+provides feedback by placing  coloured tags on top of the 
+row with the guess.
+
+ - Black: right colour in the right position.
+ 
+ - White: right colour, wrong position.
+ 
+ - Grey: colour is not in the secret code.
+    """
+
+    help_label = tk.Label(help_window, text=help_text, justify='left')
+    help_label.pack(padx=3, pady=1)
+
+    tk.Button(help_window, text='Ok', command=help_window.destroy, font=('verdana', 10), width=3).pack(padx=3, pady=3)
 
 
 def about_window(icon):
