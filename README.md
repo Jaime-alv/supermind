@@ -48,12 +48,12 @@ No need to install any other libraries; a basic, clean python installation is al
 
 From this window you can create, delete or load a profile. 
 
+
 ![main](img/main.jpg)
 
- - New profile: Every player needs a profile. Hitting this button will let you create a new one. All you
-need to do is fill in your name.
+ - New profile: Every player needs a profile. Hitting this button will let you create a new one.
  - Load profile: If there are any profiles saved, here you can load them. After selecting a profile, you
-will be prompted with the new game window.
+will be prompted with the new game window. 
  - Delete profile: delete the selected profile from the computer.
  - New game: if there is a profile loaded, you can start a new game from here. Write your desired number of games and hit
  any of the four buttons above with the difficulty label. There are four difficulties to choose from, easy, normal, hard
@@ -66,12 +66,20 @@ and custom.
    - Custom: you can customize your experience here with: Up to 8 different colours; up to 10 holes; up to 50 rounds 
    in each game.
 
+### Important!:
+When loading a profile, if there is an ongoing game, script will ask you if you would like to continue it. If affirmative,
+you will be taken to said game, if you answer "no", that game will be deleted!
+
+![continue](img/continue.jpg)
 
 ## Board Window
 
 This is the game window. Secret code is at the top and your choices at the bottom.
 Each time you submit a round, your colour choices will be displayed at a new line, the closer you are to the top, fewer
 tries you have left.
+ - Black: right colour in the right position.
+ - White: right colour, wrong position.
+ - Grey/None: that colour is not in the secret code.
 
 On the left side you can find the game board.
 
@@ -80,6 +88,8 @@ On the right side, you can see:
 - Round counter: current round you're about to submit.
 - Submit button: for submitting your code.
 - Close: Close this window and take you to the main window, the game will save its state, so you can continue it later.
+
+## Options menu
 
 ###### Copyright (C) 2021 Jaime Alvarez Fernandez
 
