@@ -459,9 +459,9 @@ class GameWindow(tk.Toplevel):
 
         # Create cascade for Help
         help_menu = tk.Menu(menu, tearoff=0)
-        help_menu.add_command(label='Help', command=self.help_player)
+        help_menu.add_command(label='Game', command=self.game_setting)
         help_menu.add_separator()
-        help_menu.add_command(label='Game')
+        help_menu.add_command(label='Help', command=self.help_player)
 
         # Add cascades to menu frame
         menu.add_cascade(label='Options', menu=options_menu)
@@ -476,6 +476,11 @@ class GameWindow(tk.Toplevel):
 
     def help_player(self):
         help_player(self.icon)
+
+    def game_setting(self):
+        colours = self.profile['config'].get('colours')
+        game_setting(self.icon, self.difficulty, self.game_number, self.total_games, self.total_rounds, colours,
+                     self.holes, self.extra_hard)
 
     # round counter at left most side
     def column_round_counter(self):
@@ -816,7 +821,6 @@ class ProfileRecords(tk.Toplevel):
         close_program = tk.Button(self, fg='red', command=self.destroy, text='Close', font=font)
         close_program.pack(side='bottom', padx=5, pady=5)
 
-        profile_text = f'» Profile: {self.player}'
         profile_label = tk.Label(self, text='» Profile:', font=self.font_title)
         profile_label.pack(anchor='w')
         player_name = tk.Label(self, text=f'    {self.player}', font=font)
@@ -939,6 +943,46 @@ def about_window(icon):
 
     close_window = tk.Button(about, text='Ok', font=('verdana', 10), command=about.destroy)
     close_window.pack(pady=4, anchor='s', side='bottom', ipadx=2)
+
+
+def game_setting(icon, difficulty, game_number, total_games, total_rounds, colours, holes, extra_hard):
+    game_setting_window = tk.Toplevel()
+    game_setting_window.focus()
+    game_setting_window.wm_iconphoto(False, icon)
+    game_setting_window.title('')
+    game_setting_window.resizable(False, False)
+    game_setting_window.minsize(width=170, height=100)
+    font_title = ('verdana', 9, 'bold')
+    font_data = ('verdana', 8)
+
+    content = tk.Frame(game_setting_window)
+    content.pack(padx=7, pady=7, anchor='w')
+
+    # difficulty
+    tk.Label(content, text='» Difficulty:', font=font_title).grid(column=0, row=0, sticky='w')
+    tk.Label(content, text=f'   · {difficulty.capitalize()}', font=font_data).grid(column=0, row=1, sticky='w')
+    # Number of games
+    tk.Label(content, text='» Number of games:', font=font_title).grid(column=0, row=2, sticky='w')
+    tk.Label(content, text=f'   · {game_number} of {total_games}', font=font_data).grid(column=0, row=3, sticky='w')
+    # Number of rounds
+    tk.Label(content, text='» Total rounds:', font=font_title).grid(column=0, row=4, sticky='w')
+    tk.Label(content, text=f'   · {total_rounds}', font=font_data).grid(column=0, row=5, sticky='w')
+    # Number of colours
+    tk.Label(content, text='» Number of colours:', font=font_title).grid(column=0, row=6, sticky='w')
+    tk.Label(content, text=f'   · {colours}', font=font_data).grid(column=0, row=7, sticky='w')
+    # Number of holes
+    tk.Label(content, text='» Number of holes:', font=font_title).grid(column=0, row=8, sticky='w')
+    tk.Label(content, text=f'   · {holes}', font=font_data).grid(column=0, row=9, sticky='w')
+    # Classic or hard mode
+    if extra_hard:
+        text = 'Extra hard mode'
+    else:
+        text = 'Classic mode'
+    tk.Label(content, text='» Game mode:', font=font_title).grid(column=0, row=10, sticky='w')
+    tk.Label(content, text=f'   · {text}', font=font_data).grid(column=0, row=11, sticky='w')
+
+    tk.Button(game_setting_window, text='Ok', command=game_setting_window.destroy, width=3,
+              font=('verdana', 10)).pack(pady=3)
 
 
 def reset_continue_mode(profile, player):
