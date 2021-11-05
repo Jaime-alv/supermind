@@ -180,8 +180,6 @@ class MainWindow(tk.Tk):
             new_stats = dict(stat)
             # noinspection PyTypeChecker
             data['statistics'][dif] = new_stats
-        if not pathlib.Path('profiles').exists():
-            pathlib.Path('profiles').mkdir(exist_ok=True)
         save_profile(data, self.player)
         self.new_profile_window.destroy()
         self.play_game['state'] = 'normal'
@@ -909,10 +907,16 @@ def read_profile(player):
 
 
 if __name__ == '__main__':
-    log_file = pathlib.Path('../tests/log.txt')
-    logging.basicConfig(filename=log_file, level=logging.DEBUG,
-                        format='%(asctime)s - %(levelname)s - %(message)s')
-    log_file.open('w')
+    try:
+        log_file = pathlib.Path('../tests/log.txt')
+        logging.basicConfig(filename=log_file, level=logging.DEBUG,
+                            format='%(asctime)s - %(levelname)s - %(message)s')
+        log_file.open('w')
+    except FileNotFoundError:
+        pass
+    if not pathlib.Path('profiles').exists():
+        pathlib.Path('profiles').mkdir(exist_ok=True)
+    logging.disable(logging.CRITICAL)
     font = ('verdana', 9)
     MainWindow().mainloop()
     logging.debug('close program')
