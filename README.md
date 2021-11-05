@@ -66,7 +66,6 @@ and custom.
    - Custom: you can customize your experience here with: Up to 8 different colours; up to 10 holes; up to 50 rounds 
    in each game.
 
-###### Background image Photo by Sharon McCutcheon from Pexels
 
 ## Board Window
 
