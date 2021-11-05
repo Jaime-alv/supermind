@@ -6,10 +6,6 @@ The script is entirely written in Python, and using only standard libraries.
 ![image](img/logo.jpg)
 ###### Photo by <a href="https://www.pexels.com/@mccutcheon">Sharon McCutcheon</a> from Pexels
 
-# Work In Progress
-
-**Game is not ready, I'm still working on it!**
-
 # The game
 
 The player, as the codebreaker, tries to guess the pattern, in both order and color, within a set number of rounds. 
