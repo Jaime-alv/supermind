@@ -91,8 +91,10 @@ On the right side, you can see:
 
 ## Options menu
 
-In the Options menu, you can get information about the script itself, your statistics, the game rules or the game's 
-settings.
+In the Options menu, you can get information about the script itself, your statistics, or load a different profile. 
+
+## Help menu
+In here you can find the game rules or the game's settings.
 
 
 
